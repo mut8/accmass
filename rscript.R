@@ -62,266 +62,168 @@ colnames(results)<-c("mz","C","C13","H","N","O","S","P","Na","calc.mass", "diffe
 return(results[order(abs(results$difference)),T])
 }
 
-findrelation<-function(mass, rel.mass, data, RE=2E-5) {
-  target.mass=mass+rel.mass
+findrelation<-function(row, lst, mult=1:5, c=0, h=0, o=0, n=0, s=0, p=0, Na=0, c13=0, RE=2E-5) {
+  mz<-lst[[1]]
+  lst<-lst[[2]]
+  rel.mass= c*mass.C12+c13*mass.C13+h*mass.H1+o*mass.O16+n*mass.N14+s*mass.S32+p*mass.P31+Na*mass.Na23
+  
+  for (i in mult) {
+  target.mass=row$mass+rel.mass
   rel.error=rel.mass*RE
-  print(target.mass)
-  print(which(data$mz>(target.mass-rel.error)&data$mz<(target.mass+rel.error)))
-  return(which(data$mz>(target.mass-rel.error)&data$mz<(target.mass+rel.error)))
+
+  new.row<-row
+  new.row$C[1]<-row$C[1]
+  new.row$C13[1]<-row$C13[1]
+  new.row$H[1]<-row$H[1]
+  new.row$O[1]<-row$O[1]
+  new.row$N[1]<-row$N[1]
+  new.row$S[1]<-row$S[1]
+  new.row$P[1]<-row$P[1]
+  new.row$Na[1]<-row$Na[1]
+  
+  new.row$calc.mass<-calc.mass(new.row)
+  
+  hits<-which(mz>(target.mass-rel.error)&mz<(target.mass+rel.error))
+  
+  for(j in hits) {
+    new.row2<-new.row
+    new.row2$mz[1]<-mz[j]
+    new.row2$difference<-new.row2$calc.mass-new.row2$mz
+    new.row2$diff.ppm<-new.row2$difference/new.row2$mz
+    lst[[j]]<-rbind(list[[j]],new.row2)
+  }
+    
+  }
+  
+  return(list(mz, lst))
 }
 
-relationloop<-function(row, data, list, RE=2E-5) {
-
-print(data)  
+relationloop<-function(row,  lst, RE=2E-5) {
   
 #13c
   print("13c")
-dif=mass.C13-mass.C12
-for (i in 1:2){
-tmp<-findrelation(data$mz[row], i*dif, data)
-if(length(tmp)>0) {
-  print(data[row,T])
-  row<-data[row,T]
-
-  row$C13[1]<-data$C13[row]+i
-  row$C[1]<-data$C[row]-i
-  row$calc.mass[1]<-calc.mass(row)
-  print(row)
-  
-for(j in tmp) {
-  row1<-row
-  row1$mz[1]<-data$mz[j]
-  row1$difference[1]<-row1$calc.mass-row1$mz
-  row1$dif.ppm[1]<-10E6*(row1$calc.mass-row1$mz)/row1$mz
-  list[[j]]<-rbind(list[[j]], row1)
-
-}
-}
-}
+  lst<-findrelation(row, lst, n=1:2, c=-1, c13=1)
 
 #CH2
   print("+CH2")
-dif=mass.C12+2*mass.H1
-for (i in 1:5){
-tmp<-findrelation(data$mz[row], i*dif, data)
-if(length(tmp)>0) {
-  row<-data[row,T]
-  print(row)
-  row$C[1]<-data[row,"C"]+i
-  row$H[1]<-data[row,"H"]+1*i
-  row[1,10]<-calc.mass(row)
-    print(row)
-  
-for(j in tmp) {
-  row1<-row
-  row1$mz[1]<-data$mz[j]
-  row1$difference[1]<-row1$calc.mass-row1$mz
-  row1$diff.ppm[1]<-10E6*(row1$calc.mass-row1$mz)/row1$mz
-  list[[j]]<-rbind(list[[j]], row1)
-}
-}
-}
-
+  lst<-findrelation(row, lst, c=1, h=2)
 
 #CH4-O
   print("+CH4 -O")
-dif=mass.C12+4*mass.H1-mass.O16
-for (i in 1:5){
-tmp<-findrelation(data$mz[row], i*dif, data)
-if(length(tmp)>0) {
-  row<-data[row,T]
-  row$C[1]<-data$C[row]+i
-  row$H[1]<-data$H[row]+2*i
-  row$O[1]<-data$O[row]-i
-  row$calc.mass[1]<-calc.mass(row)
-  
-for(j in tmp) {
-  row1<-row
-  row1$mz[1]<-data$mz[j]
-  row1$difference[1]<-row1$calc.mass-row1$mz
-  row1$diff.ppm[1]<-10E6*(row1$calc.mass-row1$mz)/row1$mz
-  list[[j]]<-rbind(list[[j]], row1)
-
-}
-}
-}
-
-
+  lst<-findrelation(row, lst, c=1, h=4, o=-1)
 
 #H2
   print("H2")
-dif=2*mass.H1
-for (i in 1:5){
-tmp<-findrelation(data$mz[row], i*dif, data)
-if(length(tmp)>0) {
-  row<-data[row,T]
-  row$H[1]<-data$H[row]+2*i
-  row$calc.mass[1]<-calc.mass(row)
-  
-for(j in tmp) {
-  row1<-row
-  row1$mz[1]<-data$mz[j]
-  row1$difference[1]<-row1$calc.mass[1]-row1$mz[1]
-  row1$diff.ppm[1]<-10E6*(row1$calc.mass[1]-row1$mz[1])/row1$mz[1]
-  list[[j]]<-rbind(list[[j]], row1)
-}
-}
-}
+  lst<-findrelation(row, lst, h=2)
 
 #C2H4O
-    print("+C2H4O")
-dif=2*mass.C12+4*mass.H1+mass.O16
-for (i in 1:5){
-tmp<-findrelation(data$mz[row], i*dif, data)
-if(length(tmp)>0) {
-  row<-data[row,T]
-  row$C[1]<-data$C[row]+2*i
-  row$H[1]<-data$H[row]+4*i
-  row$O[1]<-data$O[row]+i
-  row$calc.mass[1]<-calc.mass(row)
-  
-for(j in tmp) {
-  row1<-row
-  row1$mz[1]<-data$mz[j]
-  row1$difference[1]<-row1$calc.mass[1]-row1$mz[1]
-  row1$diff.ppm[1]<-10E6*(row1$calc.mass[1]-row1$mz[1])/row1$mz[1]
-  list[[j]]<-rbind(list[[j]], row1)
-}
-}
-}
-  
+  print("+C2H4O")
+  lst<-findrelation(row, lst, c=2, h=4, o=1)
+
 #CO2
-    print("+CO2")
-dif=mass.C12+2*mass.O16
-for (i in 1:5){
-tmp<-findrelation(data$mz[row], i*dif, data)
-if(length(tmp)>0) {
-  row<-data[row,T]
-  row$C[1]<-data$C[row]+i
-  row$O[1]<-data$O[row]+2*i
-  row$calc.mass[1]<-calc.mass(row)
-  
-for(j in tmp) {
-  row1<-row
-  row1$mz[1]<-data$mz[j]
-  row1$difference[1]<-row1$calc.mass[1]-row1$mz[1]
-  row1$diff.ppm[1]<-10E6*(row1$calc.mass[1]-row1$mz[1])/row1$mz[1]
-  list[[j]]<-rbind(list[[j]], row1)
-}
-}  
-}  
+  print("+CO2")
+  lst<-findrelation(row, lst, c=1, o=2)
 
 #C2H2O
-    print("+C2H2O")
-dif=2*mass.C12+2*mass.H1+mass.O16
-for (i in 1:5){
-tmp<-findrelation(data$mz[row], i*dif, data)
-if(length(tmp)>0) {
-  row<-data[row,T]
-  row$C[1]<-data$C[row]+2*i
-  row$H[1]<-data$H[row]+4*i
-  row$O[1]<-data$O[row]+i
-  row$calc.mass[1]<-calc.mass(row)
-  
-for(j in tmp) {
-  row1<-row
-  row1$mz[1]<-data$mz[j]
-  row1$difference[1]<-row1$calc.mass[1]-row1$mz[1]
-  row1$diff.ppm[1]<-10E6*(row1$calc.mass[1]-row1$mz[1])/row1$mz[1]
-  list[[j]]<-rbind(list[[j]], row1)
-
-}
-}
-}
+  print("+C2H2O")
+  lst<-findrelation(row, lst, c=2, h=2, o=1)
 
 #O
-    print("+O")
-dif=mass.O16
-for (i in 1:5){
-tmp<-findrelation(data$mz[row], i*dif, data)
-if(length(tmp)>0) {
-  row<-data[row,T]
-  row$O[1]<-data$O[row]+2*i
-  row$calc.mass[1]<-calc.mass(row)
-  
-for(j in tmp) {
-  row1<-row
-  row1$mz[1]<-data$mz[j]
-  row1$difference[1]<-row1$calc.mass[1]-row1$mz[1]
-  row1$diff.ppm[1]<-10E6*(row1$calc.mass[1]-row1$mz[1])/row1$mz[1]
-  list[[j]]<-rbind(list[[j]], row1)
-
-}
-}
-}
+  print("+O")
+  lst<-findrelation(row, lst, o=1)
 
 #NH
-    print("+NH")
-dif=mass.N14+mass.H1
-for (i in 1:5){
-tmp<-findrelation(data$mz[row], i*dif, data)
-if(length(tmp)>0) {
-  row<-data[row,T]
-  row$N[1]<-data$N[row]+i
-  row$H[1]<-data$H[row]+i
-  row$calc.mass[1]<-calc.mass(row)
+  print("+NH")
+  lst<-findrelation(row, lst, n=1, h=1)
+
+return(lst)
+}
+
+bforce<-function(mz, FE=3E-6, RE=2E-5, bruteforce.lim=500, verbose=T) {
+
+#  #create result dataframe, set colnames
+#  data<-data.frame(matrix(nrow=length(mz), ncol=12))
+#  colnames(data)<-c("mz","C","C13","H","N","O","S","P","Na","calc.mass", "difference", "diff.ppm")
   
-for(j in tmp) {
-  row1<-row
-  row1$mz[1]<-data$mz[j]
-  row1$difference[1]<-row1$calc.mass[1]-row1$mz[1]
-  row1$diff.ppm[1]<-10E6*(row1$calc.mass[1]-row1$mz[1])/row1$mz[1]
-  list[[j]]<-rbind(list[[j]], row1)
-
-}
-}
-}
-print(list)
-return(list)
-}
-
-mainloop<-function(mz, FE=3E-6, RE=2E-5, bruteforce.lim=500) {
-
-  data<-data.frame(matrix(nrow=length(mz), ncol=12))
-  colnames(data)<-c("mz","C","C13","H","N","O","S","P","Na","calc.mass", "difference", "diff.ppm")
-  data$mz<-sort(mz)
+  #add ascending m/z values to results dataframe
+  mz<-sort(mz)
+  
+  #create result list, set colnames
   tmp<-data.frame(matrix(nrow=0, ncol=12))
   colnames(tmp)<-c("mz","C","C13","H","N","O","S","P","Na","calc.mass", "difference", "diff.ppm")
-  plot(1:nrow(data), 1:nrow(data), type="n", ylim=c(0,20), ylab="hits", xlab="mass nr")
+  
+  lst<-vector("list", length(mz))
+  
   for(i in 1:length(mz))
-    list[[i]]<-tmp
-
-  for(i in 1:length(mz)) {
-    print(paste("check-check",i))
-    if(data$mz[i]<bruteforce.lim) {
-      print(paste("check-check",i,"a"))
-      tmp<-findformula(data$mz[i], s.max=0, p.max=0, Na.max=0)
-      print(paste("check-check",i,"b"))
+    lst[[i]]<-tmp
+  
+  #subset of peaks with mz < mz.lim, nr of peaks analysed, initialize counter 
+  sel<-which(mz<bruteforce.lim)
+  nr<-length(sel)
+  count<-1
+  
+  # for each m/z found
+  for(i in sel) {
+    print(paste(count,"/",nr,sep=""))
+    count<-count+1
+        
+      #attempt to find the formula using CHON
+      tmp<-findformula(mz[i], s.max=0, p.max=0, Na.max=0, c13.max=0)
+    
+      print("brief BF")
+    
+      #if no result is found...
       if(nrow(tmp)==0) {
-        print("check long run")
-        tmp<-findformula(data$mz[i])
+        print("extensive BF")
+        
+        #try with CHONPSNa
+        tmp<-findformula(mz[i], c13.max=0)
       }
-    list[[i]]<-rbind(tmp, list[[i]])
+    
+    #if results were found..
+    if(nrow(tmp)>0) {
+    #add all results found to the results list
+    tmp<-rbind(tmp, lst[[i]])
+    #order results and add them to lst
+    lst[[i]]<-tmp[order(abs(tmp$diff.ppm)),T]
     }
-    tmp<-list[[i]]
-    print(paste("check-check",i,"c"))
-    print(tmp[1,1:12])
-    tmp<-tmp[order(abs(tmp$diff.ppm))]
-    print(class(tmp))
-    print(tmp)
-    data[i,1:12]<-tmp[1,1:12]
-    list<-relationloop(i, data, list)
-    print("check")
-    points(i, nrow(list[[i]]))    
   }
-                  
-                   
-  return(list(data,list))                                    
+  # create plot
+  if (verbose==T) {
+      rm(nr)
+      nr<-1
+      for (i in 1:length(mz)) {
+        nr[i]<-nrow(lst[[i]])
+      }
+    plot(mz, nr, cex=.5, ylim=c(0,20), ylab="hits", xlab="mass nr")
+  }
+
+  return(list(mz, lst))
 }
 
-findformula(  kuja$mz[2])
-            , s.max=0, p.max=0, Na.max=0)
-mainloop(kuja$mz)
+plotresults<-function(lst) {
+  mz<-lst[[1]]
+  lst<-lst[[2]]
+  nr<-1
+  for (i in 1:length(mz)) {
+    nr[i]<-nrow(lst[[i]])    
+  }
+  plot(mz, nr, cex=.5, ylim=c(0,20), ylab="hits", xlab="mass nr")
+}
+
+
+
+res<-bforce(kuja$mz)
+lst<-res[[2]]
+mz<-res[[1]]
+for (i in 1:length(lst)) {
+  tmp<-lst[[i]]
+  lst[[i]]<-tmp[order(abs(tmp$diff.ppm))]
+  print(lst[[i]])
+  relationloop(lst[[i]][1,T], res)
+}
+
+
 
 #data import
 ############
