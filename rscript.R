@@ -19,20 +19,66 @@ data2.res<-bforce(data2$mz)
 
 res<-bforce(kuja$mz)
 
-operations<-data.frame(c("name", "C", "C13", "H", "O", "N", "S", "P", "Na"), nrow=1)
-operations[1,T]<-c("C13", -1, +1, 0,0,0,0,0,0)
-, operations)
-calc.mass(operations[1,T])
+operations<-  row.template
+  operations[1,T]<-c(NA,-1, 1, 0, 0, 0,0,0,0, NA, NA, NA, "+C13 -C")
+  operations[2,T]<-c(NA, 1, 0, 2, 0, 0,0,0,0, NA, NA, NA, "+CH2")
+  operations[3,T]<-c(NA, 1, 0, 4, 0,-1,0,0,0, NA, NA, NA, "+CH4 -O")
+  operations[4,T]<-c(NA, 0, 0, 2, 0, 0,0,0,0, NA, NA, NA, "+H2")
+  operations[5,T]<-c(NA, 2, 0, 4, 0, 1,0,0,0, NA, NA, NA, "+C2H4O")
+  operations[6,T]<-c(NA, 1, 0, 0, 0, 2,0,0,0, NA, NA, NA, "+CO2")
+  operations[7,T]<-c(NA, 2, 0, 2, 0, 1,0,0,0, NA, NA, NA, "+C2H2O")
+  operations[8,T]<-c(NA, 0, 0, 0, 0, 1,0,0,0, NA, NA, NA, "+O")
+  operations[9,T]<-c(NA, 1, 0, 0, 1, 0,0,0,0, NA, NA, NA, "+C2H2O")
+
+for (i in 1:nrow(operations))
+  operations[i,T]<-calc.mass(operations[i,T])
+
+diffs<-diffs.matrix(data2$mz)
+
+relations.type<-diffs
+relations.type[T,T]<-NA
+
+relations.mult<-diffs
+relations.mult[T,T]<-NA
+
+nmax=5
+mz<-data2$mz
+
+for (k in 1:nrow(operations))
+  for (i in 1:nrow(diffs))
+    for (j in (i+1):ncol(diffs))
+      for (n in 1:nmax) {
+      print(paste("k=", k, "/",nrow(operations) , " i=", i,"/",nrow(diffs),  " j=", j,"/",ncol(diffs),  " n=", n, "/", nmax))
+      if (
+        operations$calc.mass[k] < diffs[i,j] + FE*sqrt(2)*max(mz[i], mz[j]) &
+          operations$calc.mass[k] > diffs[i,j] - FE*sqrt(2)*max(mz[i], mz[j]))
+      {
+        relations.type[i,j]<-operations$comment[k]
+        relations.mult[i,j]<-n
+      }
+    }
+    
+sum(is.na(relations)==F)
 
 
-inp<-kuja$mz
-diffs<-matrix(nrow=length(inp), ncol=length(inp))
-relations<-matrix(nrow=length(inp), ncol=length(inp))
-for (i in 1:length(inp))
-for (j in 1:length(inp)) {
-  diffs[i,j]<-inp[i]-inp[j]
-  which()
-}
+which(
+  diffs > (as.numeric(operations$calc.mass[1])*(1-C13E)) & 
+  diffs < (as.numeric(operations$calc.mass[1])*(1+C13E)))
+      
+
+
+
+
+
+
+?rbind
+
+calc.mass(operations)
+*RE
+
+calc.mass(operations)
+
+mass.C12
 
 findformula(284.294, Na.max=0, p.max=0, s.max=0, c13.max=0)
 kuja[1,T]
