@@ -57,7 +57,7 @@ findformula<-function(x, c.h.min=1/3, c.o.max=1, c13.max=2, c.n.max=1, s.max=3, 
                 for(h in max(floor(ctot/3), floor(massleftNaPSC13CNO*0.8), 0) : max(0, min(((2*ctot+n)+2), ceiling(massleftNaPSC13CNO*1.2)))) {
                   #print(paste("C", c, "H", h, "O", o, "N", n, "S", s, "P", p, "Na", Na))
     
-                  #check for N-rule (n+h %% 2 == 0)
+                  #check for N-rule (n+h %% 2 == 0)n
                   if ((n+h) %% 2 == 0){
   
                     #calculate appromimate mass of compound
@@ -92,41 +92,41 @@ findformula<-function(x, c.h.min=1/3, c.o.max=1, c13.max=2, c.n.max=1, s.max=3, 
   return(results)
 }
 
-findrelation<-function(row, res, mult=1:5, c=0, h=0, o=0, n=0, s=0, p=0, Na=0, c13=0, RE=2E-5) {
-  mz<-res[[1]]
-  lst<-res[[2]]
-  rel.mass= c*mass.C12+c13*mass.C13+h*mass.H1+o*mass.O16+n*mass.N14+s*mass.S32+p*mass.P31+Na*mass.Na23
-  
-  for (i in mult) {
-  target.mass=row$mass+rel.mass*i
-  rel.error=rel.mass*i*RE
-
-  new.row<-row
-  new.row$C[1]<-row$C[1]+c*i
-  new.row$H[1]<-row$H[1]+h*i
-  new.row$O[1]<-row$O[1]+o*i
-  new.row$N[1]<-row$N[1]+n*i
-  new.row$S[1]<-row$S[1]+s*i
-  new.row$P[1]<-row$P[1]+p*i
-  new.row$Na[1]<-row$Na[1]+Na*i
-  
-  new.row<-calc.mass(new.row)
-  
-  hits<-which(mz>(target.mass-rel.error)&mz<(target.mass+rel.error))
-  print(hits)
-  
-  for(j in hits) {
-    new.row2<-new.row
-    new.row2$mz[1]<-mz[j]
-    new.row2$difference<-new.row2$calc.mass-new.row2$mz
-    new.row2$diff.ppm<-new.row2$difference/new.row2$mz
-    lst[[j]]<-rbind(list[[j]],new.row2)
-  }
-    
-  }
-  
-  return(list(mz, lst))
-}
+# findrelation<-function(row, res, mult=1:5, c=0, h=0, o=0, n=0, s=0, p=0, Na=0, c13=0, RE=2E-5) {
+#   mz<-res[[1]]
+#   lst<-res[[2]]
+#   rel.mass= c*mass.C12+c13*mass.C13+h*mass.H1+o*mass.O16+n*mass.N14+s*mass.S32+p*mass.P31+Na*mass.Na23
+#   
+#   for (i in mult) {
+#   target.mass=row$mass+rel.mass*i
+#   rel.error=rel.mass*i*RE
+# 
+#   new.row<-row
+#   new.row$C[1]<-row$C[1]+c*i
+#   new.row$H[1]<-row$H[1]+h*i
+#   new.row$O[1]<-row$O[1]+o*i
+#   new.row$N[1]<-row$N[1]+n*i
+#   new.row$S[1]<-row$S[1]+s*i
+#   new.row$P[1]<-row$P[1]+p*i
+#   new.row$Na[1]<-row$Na[1]+Na*i
+#   
+#   new.row<-calc.mass(new.row)
+#   
+#   hits<-which(mz>(target.mass-rel.error)&mz<(target.mass+rel.error))
+#   print(hits)
+#   
+#   for(j in hits) {
+#     new.row2<-new.row
+#     new.row2$mz[1]<-mz[j]
+#     new.row2$difference<-new.row2$calc.mass-new.row2$mz
+#     new.row2$diff.ppm<-new.row2$difference/new.row2$mz
+#     lst[[j]]<-rbind(list[[j]],new.row2)
+#   }
+#     
+#   }
+#   
+#   return(list(mz, lst))
+# }
 
 bforce<-function(mz, FE=3E-6, RE=2E-5, bruteforce.lim=500, verbose=T) {
 
@@ -138,9 +138,7 @@ bforce<-function(mz, FE=3E-6, RE=2E-5, bruteforce.lim=500, verbose=T) {
   mz<-sort(mz)
   
   #create result list, set colnames
-  tmp<-data.frame(matrix(nrow=0, ncol=12))#CH4-O
-  print("+CH4 -O")
-  res<-findrelation(row, res, c=1, h=4, o=-1)
+  tmp<-data.frame(matrix(nrow=0, ncol=12))
 
   colnames(tmp)<-c("mz","C","C13","H","N","O","S","P","Na","calc.mass", "difference", "diff.ppm")
   
@@ -218,12 +216,67 @@ mass.P31<-30.9737634
 mass.S32<-31.9720718
 
 
-diffs.matrix<-function(inp){
+findrelations<-function(inp){
+
+print("calculate diffs")
 diffs<-matrix(nrow=length(inp), ncol=length(inp))
 relations<-matrix(nrow=length(inp), ncol=length(inp))
 for (i in 1:length(inp))
 for (j in 1:length(inp)) {
   diffs[i,j]<-inp[i]-inp[j]
 }
-return(diffs)
+
+kmax<-nrow(operations)
+imax<-nrow(diffs)
+jmax<-ncol(diffs)
+nmax=5
+hits=0
+
+relationlist<-list(row.template)
+for (i in 1:imax) {
+  relationlist[[i]]<-row.template
+  colnames(relationlist[[i]])<-c("mz.from", "C", "C13", "H", "N", "O", "S", "P", "Na", "n", "difference", "difference.ppm", "comment")
 }
+
+print("find relations loop")
+for (k in 1:kmax)
+  for (i in 1:imax)
+    for (j in (i+1):jmax)
+      for (n in (-1*nmax):nmax) {
+      print(paste("k=", k, "/",kmax , " i=", i,"/",imax,  " j=", j,"/",jmax,  " n=-",nmax, "/", n, "/", nmax, " hits=", hits, sep=""))
+      if (
+        operations$calc.mass[k] < diffs[i,j] + FE*sqrt(2)*max(inp[i], inp[j]) &
+          operations$calc.mass[k] > diffs[i,j] - FE*sqrt(2)*max(inp[i], inp[j]))
+      {
+        nr<-nrow(relationlist[[i]])
+        relationlist[[i]][(nr+1),2:9]<-as.numeric(operations[k,2:9])*n
+        relationlist[[i]][(nr+1),"mz.from"]<-inp[j]
+        relationlist[[i]][(nr+1),"comment"]<-operations[k,"comment"]
+        nr<-nrow(relationlist[[j]])
+        relationlist[[j]][(nr+1),2:9]<-as.numeric(operations[k,2:9])*n*-1
+        relationlist[[j]][(nr+1),"mz.from"]<-inp[i]
+        relationlist[[j]][(nr+1),"comment"]<-operations[k,"comment"]
+        hits<-hits+1
+
+      }
+    }
+
+
+
+return(relationlist)
+}
+
+operations<-  row.template
+  operations[1,T]<-c(NA,-1, 1, 0, 0, 0,0,0,0, NA, NA, NA, "+C13 -C")
+  operations[2,T]<-c(NA, 1, 0, 2, 0, 0,0,0,0, NA, NA, NA, "+CH2")
+  operations[3,T]<-c(NA, 1, 0, 4, 0,-1,0,0,0, NA, NA, NA, "+CH4 -O")
+  operations[4,T]<-c(NA, 0, 0, 2, 0, 0,0,0,0, NA, NA, NA, "+H2")
+  operations[5,T]<-c(NA, 2, 0, 4, 0, 1,0,0,0, NA, NA, NA, "+C2H4O")
+  operations[6,T]<-c(NA, 1, 0, 0, 0, 2,0,0,0, NA, NA, NA, "+CO2")
+  operations[7,T]<-c(NA, 2, 0, 2, 0, 1,0,0,0, NA, NA, NA, "+C2H2O")
+  operations[8,T]<-c(NA, 0, 0, 0, 0, 1,0,0,0, NA, NA, NA, "+O")
+  operations[9,T]<-c(NA, 1, 0, 0, 1, 0,0,0,0, NA, NA, NA, "+C2H2O")
+
+for (i in 1:nrow(operations))
+  operations[i,T]<-calc.mass(operations[i,T])
+
