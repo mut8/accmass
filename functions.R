@@ -1,8 +1,24 @@
 #MS error margins
+
+
 error=3E-6
 FE=error
 RE=2E-5
 C13E=1E-4
+
+mass.e<-0.0005485
+mass.H1<-1.007825037
+mass.H2<-2.014101787
+mass.C12<-12
+mass.C13<-13.00335484
+mass.N14<-14.00307401   
+mass.N15<-15.00010898
+mass.O16<-15.99491464
+mass.O18<-17.99915939
+mass.Na23<-22.9897697
+mass.P31<-30.9737634
+mass.S32<-31.9720718
+
 
 H.substract<-function(x) return(x-mass.H1+mass.e)
 
@@ -84,49 +100,11 @@ findformula<-function(x, c.h.min=1/3, c.o.max=1, c13.max=2, c.n.max=1, s.max=3, 
       }
     }
   }
-  #colnames(results)<-c("mz","C","C13","H","N","O","S","P","Na","calc.mass", "difference", "diff.ppm")
-  #colnames(results)<-
-  #  colnames(row.template)
-  #if(nrow(results)>0)
+
   results<-results[order(abs(as.numeric(results$difference))),T]
   return(results)
 }
 
-# findrelation<-function(row, res, mult=1:5, c=0, h=0, o=0, n=0, s=0, p=0, Na=0, c13=0, RE=2E-5) {
-#   mz<-res[[1]]
-#   lst<-res[[2]]
-#   rel.mass= c*mass.C12+c13*mass.C13+h*mass.H1+o*mass.O16+n*mass.N14+s*mass.S32+p*mass.P31+Na*mass.Na23
-#   
-#   for (i in mult) {
-#   target.mass=row$mass+rel.mass*i
-#   rel.error=rel.mass*i*RE
-# 
-#   new.row<-row
-#   new.row$C[1]<-row$C[1]+c*i
-#   new.row$H[1]<-row$H[1]+h*i
-#   new.row$O[1]<-row$O[1]+o*i
-#   new.row$N[1]<-row$N[1]+n*i
-#   new.row$S[1]<-row$S[1]+s*i
-#   new.row$P[1]<-row$P[1]+p*i
-#   new.row$Na[1]<-row$Na[1]+Na*i
-#   
-#   new.row<-calc.mass(new.row)
-#   
-#   hits<-which(mz>(target.mass-rel.error)&mz<(target.mass+rel.error))
-#   print(hits)
-#   
-#   for(j in hits) {
-#     new.row2<-new.row
-#     new.row2$mz[1]<-mz[j]
-#     new.row2$difference<-new.row2$calc.mass-new.row2$mz
-#     new.row2$diff.ppm<-new.row2$difference/new.row2$mz
-#     lst[[j]]<-rbind(list[[j]],new.row2)
-#   }
-#     
-#   }
-#   
-#   return(list(mz, lst))
-# }
 
 bforce<-function(mz, FE=3E-6, RE=2E-5, bruteforce.lim=500, verbose=T) {
 
@@ -189,48 +167,46 @@ bforce<-function(mz, FE=3E-6, RE=2E-5, bruteforce.lim=500, verbose=T) {
     plot(mz, nr, cex=.5, ylim=c(0,20), ylab="hits", xlab="mass nr")
   }
 
-  return(list(mz, lst))
+  return(lst)
 }
 
-plotresults<-function(res) {
-  mz<-res[[1]]
-  lst<-res[[2]]
+plotresults<-function(lst, mz, xlab="mass nr", ylab="hits", cex=.5, ...) {
   nr<-1
   for (i in 1:length(mz)) {
     nr[i]<-nrow(lst[[i]])    
   }
-  plot(mz, nr, cex=.5, ylim=c(0,20), ylab="hits", xlab="mass nr")
+  plot(mz, nr, cex=cex, ylab=ylab, xlab=xlab, ...)
 }
 
-mass.e<-0.0005485
-mass.H1<-1.007825037
-mass.H2<-2.014101787
-mass.C12<-12
-mass.C13<-13.00335484
-mass.N14<-14.00307401   
-mass.N15<-15.00010898
-mass.O16<-15.99491464
-mass.O18<-17.99915939
-mass.Na23<-22.9897697
-mass.P31<-30.9737634
-mass.S32<-31.9720718
 
 
 findrelations<-function(inp){
 
+kmax<-nrow(operations)
+imax<-length(inp)
+jmax<-imax
+nmax=5
+hits=0  
+  
 print("calculate diffs")
 diffs<-matrix(nrow=length(inp), ncol=length(inp))
-relations<-matrix(nrow=length(inp), ncol=length(inp))
 for (i in 1:length(inp))
 for (j in 1:length(inp)) {
   diffs[i,j]<-inp[i]-inp[j]
 }
 
-kmax<-nrow(operations)
-imax<-nrow(diffs)
-jmax<-ncol(diffs)
-nmax=5
-hits=0
+print("calculate diff error margins")
+
+diffsminerror<-diffs
+diffspluerror<-diffs
+
+for (i in 1:imax) {
+print(paste("calculate diff error margins", i, "/", imax))
+  for (j in 1:jmax) {
+
+diffsminerror[i,j]<-diffs[i,j]-FE*1.414214*max(inp[c(i,j)])
+diffspluerror[i,j]<-diffs[i,j]+FE*1.414214*max(inp[c(i,j)])
+}}
 
 relationlist<-list(row.template)
 for (i in 1:imax) {
@@ -238,30 +214,34 @@ for (i in 1:imax) {
   colnames(relationlist[[i]])<-c("mz.from", "C", "C13", "H", "N", "O", "S", "P", "Na", "n", "difference", "difference.ppm", "comment")
 }
 
+
 print("find relations loop")
-for (k in 1:kmax)
-  for (i in 1:imax)
-    for (j in (i+1):jmax)
-      for (n in (-1*nmax):nmax) {
-      print(paste("k=", k, "/",kmax , " i=", i,"/",imax,  " j=", j,"/",jmax,  " n=-",nmax, "/", n, "/", nmax, " hits=", hits, sep=""))
-      if (
-        operations$calc.mass[k] < diffs[i,j] + FE*sqrt(2)*max(inp[i], inp[j]) &
-          operations$calc.mass[k] > diffs[i,j] - FE*sqrt(2)*max(inp[i], inp[j]))
-      {
-        nr<-nrow(relationlist[[i]])
-        relationlist[[i]][(nr+1),2:9]<-as.numeric(operations[k,2:9])*n
-        relationlist[[i]][(nr+1),"mz.from"]<-inp[j]
-        relationlist[[i]][(nr+1),"comment"]<-operations[k,"comment"]
-        nr<-nrow(relationlist[[j]])
-        relationlist[[j]][(nr+1),2:9]<-as.numeric(operations[k,2:9])*n*-1
-        relationlist[[j]][(nr+1),"mz.from"]<-inp[i]
-        relationlist[[j]][(nr+1),"comment"]<-operations[k,"comment"]
-        hits<-hits+1
-
-      }
-    }
-
-
+for(k in 1:nrow(operations))
+{
+  print(paste("looking for relations:", operations$comment[k]))
+  for(n in c(-nmax:-1, 1:nmax)) 
+  {
+    print(paste("multiplicator", n))
+    x<- as.numeric(operations$calc.mass[k])* n
+    mat<-diffspluerror > x & diffsminerror < x 
+      for (i in 2:(imax))
+        for (j in 1:(i-1))
+          if (mat[i,j])
+          {
+            nr<-nrow(relationlist[[i]])
+            relationlist[[i]][(nr+1),c("C","C13","H","N","O","S","P","Na")]<-as.numeric(operations[k,c("C","C13","H","N","O","S","P","Na")])*n
+            relationlist[[i]][(nr+1),"mz.from"]<-inp[j]
+            relationlist[[i]][(nr+1),"n"]<-n
+            relationlist[[i]][(nr+1),"comment"]<-paste(operations[k, "comment"], diffs[i,j])
+            nr<-nrow(relationlist[[j]])
+            relationlist[[j]][(nr+1),c("C","C13","H","N","O","S","P","Na")]<-as.numeric(operations[k,c("C","C13","H","N","O","S","P","Na")])*n-1
+            relationlist[[j]][(nr+1),"mz.from"]<-inp[i]
+            relationlist[[j]][(nr+1),"n"]<-n
+            relationlist[[j]][(nr+1),"comment"]<-paste(operations[k,"comment"], -1*diffs[i,j])
+            hits<-hits+1
+          }
+  }
+}
 
 return(relationlist)
 }
@@ -280,3 +260,36 @@ operations<-  row.template
 for (i in 1:nrow(operations))
   operations[i,T]<-calc.mass(operations[i,T])
 
+vanK.plot<-function(df, ylab="H:C", xlab="O:C", elements="CHO", ...) {
+  x <- as.numeric(df$O) / (as.numeric(df$C) + as.numeric(df$C13))
+if (elements == "CHO")
+  y <- as.numeric(df$H) / (as.numeric(df$C) + as.numeric(df$C13))
+if (elements == "CNO")
+  y <- as.numeric(df$N) / (as.numeric(df$C) + as.numeric(df$C13))
+if (elements == "CNO" & ylab=="H:C")
+  ylab<-"N:C"
+  
+  plot(x, y, ylab=ylab, xlab=xlab, ...)
+}
+  
+  
+order.rows<-function(df, order="difference") {
+  if(order=="difference"|order=="dif"|order=="diff"|order=="d")
+  res<-df[order(abs(as.numeric(df$diff.ppm))),T]
+  #if(order=="NPSNa")
+  #res<-df[order(rowSums(as.numeric(df[,c("N", "P", "S", "Na")])))]
+  return(res)
+}
+
+dbe<-function(row) {
+  return(1+row$C+row$C13+row$N/2-row$H/2)
+}
+
+
+collect<-function(lst){
+  mat<-row.template
+  for(i in 1:length(lst))
+  mat[i,T]<-lst[[i]][1,T]
+  return(mat)
+}
+ 
