@@ -1,0 +1,12 @@
+ Volume in drive E is Data
+ Volume Serial Number is 36A6-E778
+
+ Directory of E:\DIPLOMARBEIT Polymerdynamics 8.11.2011\Data\Orbitrap\Dipl
+
+[.]                                [..]
+[Bodenwasser]                      CalMix_IonTreeTest1_16072011.raw
+[Laub]                             MeOH_MetOH_1.raw
+MeOH_MQ_MetOH.raw                  namelist.txt
+[Wurzelexsudat]                    
+               4 File(s)      2,228,258 bytes
+               5 Dir(s)  24,257,449,984 bytes free

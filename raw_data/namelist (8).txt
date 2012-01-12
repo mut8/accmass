@@ -1,0 +1,18 @@
+ Volume in drive E is Data
+ Volume Serial Number is 36A6-E778
+
+ Directory of E:\DIPLOMARBEIT Polymerdynamics 8.11.2011\Data\Orbitrap\MS Flavonoide
+
+[.]
+[..]
+[Catechin]
+[Eriodictyol_Fenton]
+[Eriodictyol_Standard]
+[Fenton_Cocktail_empty]
+[MeOH_1perFA]
+namelist.txt
+[Taxifolin_Standard]
+[Taxifolin_Standard_Fenton_Rep1]
+[Taxifolin_Standard_Fenton_Rep3_concentrated]
+               1 File(s)              0 bytes
+              10 Dir(s)  24,257,425,408 bytes free

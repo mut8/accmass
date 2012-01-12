@@ -1,0 +1,53 @@
+
+R version 2.13.1 (2011-07-08)
+Copyright (C) 2011 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+Platform: i686-pc-linux-gnu (32-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> setwd("~/Documents/accmass")
+> source("functions.R")
+> 
+> sink("output")
+> #load data
+> 
+> print(Sys.time())
+> print("load data")
+> data1<-read.csv("raw_data/test2.csv")
+> #kuja<-read.csv("raw_data/kujawinski2006.csv")
+> 
+> 
+> data1[c("C13", "N15", "H2", "O18")]<-0
+> data1$mz<-H.substract(data1$mz)
+> 
+> #set Signal to Noise limit
+> SN.lim<-3
+> 
+> #order mz ascending
+> data1<-data1[order(data1$mz),T]
+> 
+> # remove masses below S:N
+> data2<-data1[data1$Intensity>SN.lim*data1$Noise,T]
+> 
+> print(Sys.time())
+> print ("bruteforce")
+> data2.bf<-bforce(data2$mz, verbose=F)
+> 
+> print(Sys.time())
+> print ("relations")
+> data2.rel<-findrelations(data2$mz)
+Error: subscript out of bounds
+Execution halted

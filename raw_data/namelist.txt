@@ -1,0 +1,16 @@
+ Volume in drive E is Data
+ Volume Serial Number is 36A6-E778
+
+ Directory of E:\DIPLOMARBEIT Polymerdynamics 8.11.2011\Data\Orbitrap
+
+[.]                           [..]
+110_SalixFS_MQ_61109_FS.raw   [Dipl]
+[KFC Ethanolphase]            [KFC Wasserphase]
+[MS Flavonoide]               namelist.txt
+SalixBlank_FS.raw             SalixCNS_MQ_61109_FS.raw
+SalixCS_MQ_61109_FS.raw       SalixFNS_MQ_61109_FS.raw
+SalixFS_MQ_61109_FS.raw       SalixKNS_MQ_61109_FS.raw
+SalixKS_MQ_61109_FS.raw       SalixWPEtAcMeOH_MQ_FS.raw
+SalixWPEtAcMQ_MQ_FS.raw       
+              11 File(s)     44,957,610 bytes
+               6 Dir(s)  23,727,222,784 bytes free

@@ -1,6 +1,7 @@
 setwd("~/Documents/accmass")
 source("functions.R")
 
+
 #sink("output")
 #load data
 
@@ -22,14 +23,42 @@ data1<-data1[order(data1$mz),T]
 # remove masses below S:N
 data2<-data1[data1$Intensity>SN.lim*data1$Noise,T]
 
+numberize(res)
+
+
+dist<-dist(data2$mz[1:50])
+
+
+?dist
+  
+rbind(bf[bf$mz==])
+
+  bf.tab<-as.data.frame(table(bf))
+  res.tab<-as.data.frame(table(rel))
+ 
+
+  )
+  el<-res[, elements]
+<-
+  res<-
+  findformula(data2$mz[203])
+
+numberize(res)
+res[,elements]
+
+?cut.tree
 print(Sys.time())
 print ("bruteforce")
 data2.bf<-bforce(data2$mz, verbose=F)
-#kuja.bf<-bforce(kuja$mz, verbose=F)
+kuja.bf<-bforce(kuja$mz, verbose=F)
+
+kuja.rel<-findrelations(kuja$mz, operations=operations, FE=FE, nmax=5)
+
+warnings()
 
 print(Sys.time())
 print ("relations")
-data2.rel<-findrelations(data2$mz)
+data2.rel<-findrelations(data2$mz, operations=operations, FE=FE, nmax=5)
 print(Sys.time())
 
 
@@ -81,38 +110,7 @@ j
 data2.rel[[606]]
 data2.merge[[606]]
 
-data2.merge<-data2.bf
-for (i in 1:length(data2.rel)) {
-  nrrel<-nrow(data2.rel[[i]])
-  print(paste(i, "/", length(data2.rel)))
-  if(nrrel>0) {
-    for(j in 1:nrrel) {
-      nrbf<-nrow(data2.merge[[i]])
-      from<-which(data2$mz==data2.rel[[i]][1,"mz.from"])
-      if (from < i & nrow(data2.merge[[from]])>0)
-      {
-        data2.merge[[i]][nrbf+1,T]<-  data2.bf[[from]][1,T]
-        #data2.merge[[i]][nrbf+1,T]
-        data2.merge[[i]][nrbf+1,c("C", "C13", "H", "O", "N", "P", "S", "Na")]<-
-          as.numeric(data2.merge[[i]][nrbf+1,c("C", "C13", "H", "O", "N", "P", "S", "Na")]) +
-          as.numeric(data2.rel[[i]][j,c("C", "C13", "H", "O", "N", "P", "S", "Na")])
-        data2.merge[[i]][nrbf+1,T]<-calc.mass(data2.merge[[i]][nrbf+1,T])
-        data2.merge[[i]][nrbf+1,"comment"]<-data2.rel[[i]][j,"comment"]
-        data2.merge[[i]][nrbf+1,"mz"]<-data2$mz[i]
-        data2.merge[[i]][nrbf+1,"difference"]<-
-          as.numeric(data2.merge[[i]][nrbf+1,"calc.mass"])-
-          as.numeric(data2.merge[[i]][nrbf+1,"mz"])
-        data2.merge[[i]][nrbf+1,"diff.ppm"]<-
-          1E6*as.numeric(data2.merge[[i]][nrbf+1,"difference"])/
-          as.numeric(data2.merge[[i]][nrbf+1,"mz"])
- 
-      }
-      
-    }
-  data2.merge[[i]]<-order.rows(data2.merge[[i]])
-  }
-}
-
+d
 warnings()
 
 data2.bf
@@ -134,3 +132,10 @@ print(Sys.time())
 
 kuja.bf.col<-collect(kuja.bf)
 vanK.plot(kuja.bf.col, cex=.5, xlim=c(0,1), ylim=c(0,3), elements="CHO")
+
+
+
+
+dist<-dist(log(data2$mz[1:50]))
+clust<-as.hclust(agnes(dist))
+cutree(clust, h=log(1E-1))

@@ -1,0 +1,38 @@
+ Volume in drive E is Data
+ Volume Serial Number is 36A6-E778
+
+ Directory of E:\DIPLOMARBEIT Polymerdynamics 8.11.2011\Data\Orbitrap\Dipl\Laub
+
+[.]
+[..]
+10G_Laubextrakt.raw
+11G_Laubextrakt.raw
+12G_1_Laubextrakt.raw
+12G_2_Laubextrakt.raw
+12G_Laubextrakt.raw
+1BFE0.raw
+2BFE_1_Laubextrakt.raw
+2BFE_Laubextrakt.raw
+3BFE_Laubextrakt.raw
+4B_Laubextrakt.raw
+5B_1_Laubextrakt.raw
+5B_Laubextrakt.raw
+6B_Laubextrakt.raw
+7GFE0_1_Laubextrakt.raw
+7GFE0_Laubextrakt.raw
+8GFE_Laubextrakt.raw
+9GFE_Laubextrakt.raw
+namelist.txt
+ReAdW.exe
+W29112010_Laubextrakt.raw
+WETACMEOH_ETOH_Laubextrakt.raw
+WETACMEOH_MQ_Laubextrakt.raw
+WPETACMEOH_ETOH_IT_Laubextrakt.raw
+WPETACMEOH_ETOH_Laubextrakt.raw
+WPETACMEOH_G_Laubextrakt.raw
+WPETACMEOH_MQ1_Laubextrakt.raw
+WPETACMEOH_MQ1_Laubextrakt_110719133211.raw
+WPETACMEOH_MQ_IT_Laubextrakt.raw
+WPETACMEOH_MQ_Laubextrakt.raw
+              29 File(s)     50,805,164 bytes
+               2 Dir(s)  24,257,470,464 bytes free

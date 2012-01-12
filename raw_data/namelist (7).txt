@@ -1,0 +1,63 @@
+ Volume in drive E is Data
+ Volume Serial Number is 36A6-E778
+
+ Directory of E:\DIPLOMARBEIT Polymerdynamics 8.11.2011\Data\Orbitrap\Dipl\Wurzelexsudat
+
+[.]
+[..]
+MAB91_10_Wurzelexsudat.raw
+MAB91_C_Wurzelexsudat.raw
+MAB91_MQMEOH_C_Wurzelexsudat.raw
+MAB91_MQMEOH_Wurzelexsudat.raw
+MAB91_MQMEOH_Wurzelexsudat_110719161454.raw
+MAB91_Wurzelexsudat.raw
+MAB92_10_Wurzelexsudat.raw
+MAB92_1_Wurzelexsudat.raw
+MAB92_MQ_Wurzelexsudat.raw
+MAB92_Wurzelexsudat.raw
+MAB92_W_MQ.raw
+MAB93_10_Wurzelexsudat.raw
+MAB93_Wurzelexsudat.raw
+MAB94_10_0_1_Wurzelexsudat.raw
+MAB94_10_0_Wurzelexsudat.raw
+MAB94_10_Wurzelexsudat.raw
+MAB94_1_Wurzelexsudat.raw
+MAB94_Wurzelexsudat.raw
+MEOHMQ_10_0_Wurzelexsudat.raw
+MEOHMQ_10_Wurzelexsudat.raw
+MEOH_10_0_0_Wurzelexsudat.raw
+MEOH_10_0_2_Wurzelexsudat.raw
+MEOH_10_Wurzelexsudat.raw
+MSK1_10_0_Wurzelexsudat.raw
+MSK1_C_Wurzelexsudat.raw
+MSK1_Wurzelexsudat.raw
+MSK2_10_0_Wurzelexsudat.raw
+MSK2_Wurzelexsudat.raw
+MSK3_10_0_Wurzelexsudat.raw
+MSK3_Wurzelexsudat.raw
+NAAC_10_Wurzelexsudat.raw
+NAAC_MQMEOH_1_Wurzelexsudat.raw
+NAAC_MQMEOH_Wurzelexsudat.raw
+NAAC_Wurzelexsudat.raw
+namelist.txt
+S4AB91_10_0_Wurzelexsudat.raw
+S4AB91_Wurzelexsudat.raw
+S4AB92_10_0_Wurzelexsudat.raw
+S4AB92_1_Wurzelexsudat.raw
+S4AB92_Wurzelexsudat.raw
+S4AB93_10_0_Wurzelexsudat.raw
+S4AB93_Wurzelexsudat.raw
+S4AB94_10_0_Wurzelexsudat.raw
+S4AB94_Wurzelexsudat.raw
+S4SK1_10_0_Wurzelexsudat.raw
+S4SK1_Wurzelexsudat.raw
+S4SK1_Wurzelexsudat_110719190513.raw
+S4SK2_10_0_Wurzelexsudat.raw
+S4SK2_Wurzelexsudat.raw
+S4SK3_10_0_Wurzelexsudat.raw
+S4SK3_Wurzelexsudat.raw
+S4SK4_10_0_1_Wurzelexsudat.raw
+S4SK4_10_0_Wurzelexsudat.raw
+S4SK4_Wurzelexsudat.raw
+              54 File(s)     77,785,674 bytes
+               2 Dir(s)  24,257,458,176 bytes free

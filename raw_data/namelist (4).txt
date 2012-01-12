@@ -1,0 +1,24 @@
+ Volume in drive E is Data
+ Volume Serial Number is 36A6-E778
+
+ Directory of E:\DIPLOMARBEIT Polymerdynamics 8.11.2011\Data\Orbitrap\KFC Ethanolphase
+
+[.]                              [..]
+Blank_EtOH.raw                   Blank_EtOH_1uS.raw
+C_NS_2411_EtOH.raw               C_NS_2411_EtOH_1uS.raw
+C_NS_611_EtOH.raw                C_NS_611_EtOH_1uS.raw
+C_S_2411_EtOH.raw                C_S_2411_EtOH_1uS.raw
+C_S_611_EtOH.raw                 C_S_611_EtOH_1uS.raw
+F_NS_2411_EtOH.raw               F_NS_2411_EtOH_1uS.raw
+F_NS_611_EtOH.raw                F_NS_611_EtOH_1uS.raw
+F_S_2411_EtOH.raw                F_S_2411_EtOH_1uS.raw
+F_S_611_EtOH.raw                 F_S_611_EtOH_1uS.raw
+F_S_611_EtOH_MSMSv445mz.raw      K_NS_2411_EtOH.raw
+K_NS_2411_EtOH_1uS.raw           K_NS_611_EtOH.raw
+K_NS_611_EtOH_1uS.raw            K_S_2411_EtOH.raw
+K_S_2411_EtOH_1uS.raw            K_S_611_EtOH.raw
+K_S_611_EtOH_1uS.raw             K_S_611_EtOH_1uSMSMSv409mz.raw
+MeOH_EtOH.raw                    MeOH_EtOH_1uS.raw
+namelist.txt                     
+              31 File(s)    238,222,944 bytes
+               2 Dir(s)  24,257,445,888 bytes free

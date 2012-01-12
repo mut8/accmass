@@ -1,0 +1,20 @@
+ Volume in drive E is Data
+ Volume Serial Number is 36A6-E778
+
+ Directory of E:\DIPLOMARBEIT Polymerdynamics 8.11.2011\Data\Orbitrap\Dipl\Bodenwasser
+
+[.]                                    [..]
+MAB91 (Bodenwasser_ev).raw             MAB92_Bodenwasser.raw
+MAB93_Bodenwasser.raw                  MAB94_Bodenwasser.raw
+MAB94_WDH_Bodenwasser.raw              MSK1_Bodenwasser.raw
+MSK2_Bodenwasser.raw                   MSK3_Bodenwasser.raw
+namelist.txt                           S4AB91_Bodenwasser.raw
+S4AB92_Bodenwasser.raw                 S4AB93_1_Bodenwasser.raw
+S4AB93_Bodenwasser.raw                 S4AB94_1_Bodenwasser.raw
+S4SK1_1_Bodenwasser.raw                S4SK1_Bodenwasser.raw
+S4SK2_1_Bodenwasser.raw                S4SK2_2_Bodenwasser.raw
+S4SK2_2_Bodenwasser_110718162836.raw   S4SK2_Bodenwasser.raw
+S4SK3_WDH_Bodenwasser.raw              S4SK4_1_Bodenwasser.raw
+S4SK4_Bodenwasser_110718162836.raw     
+              23 File(s)     25,528,844 bytes
+               2 Dir(s)  24,273,776,640 bytes free
