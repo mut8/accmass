@@ -10,7 +10,6 @@ print("load data")
 data1<-read.csv("raw_data/test2.csv")
 kuja<-read.csv("raw_data/kujawinski2006.csv")
 
-
 data1[c("C13", "N15", "H2", "O18")]<-0
 data1$mz<-H.substract(data1$mz)
 
@@ -23,44 +22,45 @@ data1<-data1[order(data1$mz),T]
 # remove masses below S:N
 data2<-data1[data1$Intensity>SN.lim*data1$Noise,T]
 
-numberize(res)
-
-
 dist<-dist(data2$mz[1:50])
 
+merge(kuja.bf, kuja.rel, clean=T)
 
-?dist
-  
-rbind(bf[bf$mz==])
 
-  bf.tab<-as.data.frame(table(bf))
-  res.tab<-as.data.frame(table(rel))
- 
-
-  )
-  el<-res[, elements]
-<-
-  res<-
-  findformula(data2$mz[203])
-
-numberize(res)
-res[,elements]
-
-?cut.tree
 print(Sys.time())
 print ("bruteforce")
 data2.bf<-bforce(data2$mz, verbose=F)
-kuja.bf<-bforce(kuja$mz, verbose=F)
+#kuja.bf<-bforce(kuja$mz, verbose=F)
+
 
 kuja.rel<-findrelations(kuja$mz, operations=operations, FE=FE, nmax=5)
 
 warnings()
 
 print(Sys.time())
-print ("relations")
+print ("C13 isotopes")
+data2.c13.rel<-findrelations(data2$mz, operations=iso.operations, FE=FE, nmax=1)
+
+
+print ("relations") b
 data2.rel<-findrelations(data2$mz, operations=operations, FE=FE, nmax=5)
 print(Sys.time())
 
+data2.rel.merge<-rbind(data2.rel, data2.c13.rel)
+
+data2.merge<-merge(data2.bf, rbind(data2.rel, data2.c13.rel), arg=F, clean=F)
+      hplot.results(data2.rel.merge, ylim=c(0,5))
+      )
+
+pdf("vank.pdf", width=7, height=14)
+par(mfrow=c(2,1))
+vanK.plot(data2.merge, cex=0.4, ylim=c(0,1), elements="CNO")
+vanK.plot(data2.merge, cex=0.4, ylim=c(0,3))
+dev.off()
+
+hist(data2.merge$diff.ppm)
+plot.results(data2.merge)
+plot(data2.merge$mz, abs(data2.merge$diff.ppm))
 
 ?class
 data2.rel.bak<-data2.rel
@@ -74,19 +74,7 @@ asnumberize<-function(rows) {
   rows[,elements]<-as.numeric(rows[,elements])  
 }
 
-cleanup<- function(rows) {
-  kill=F
-  for (i in 1:nrows(rows)) {
-     k1<-min(rows[i,elements])<0
-     k2<-rows$C+rows$C13<1
-     k3<-rows$H>(2+2*rows$C+2*rows$C13+rows$N)
-     k4<-rows$H>3*rows$C
-     k5<-rows$O>rows$C
-     k6<-rows$N>rows$C
-     if(k1|k2|k3|k4|k5|k6) {kill[i]<-T} else {kill[i]<-F}
-  }
-  return(rows[kill=F,T])
-}
+
   
   
 }

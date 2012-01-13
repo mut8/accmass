@@ -62,6 +62,9 @@ calc.mass<-function(data) {
 for (i in 1:nrow(operations))
   operations[i,T]<-calc.mass(operations[i,T])
 
+for (i in 1:nrow(iso.operations))
+  iso.operations[i,T]<-calc.mass(iso.operations[i,T])
+
 
 ##
 ##findformula: algorithm to calculate sum formula from accurate mass
@@ -189,6 +192,7 @@ plot.results<-function(res, ...) {
   plot(tmp[,1], tmp[,2], cex=.5, ylim=c(0,20), ylab="hits", xlab="mass nr")
 }
 
+
 findrelations<-function(inp, operations=operations, nmax=5, FE=FE){
 
 kmax<-nrow(operations)
@@ -219,10 +223,6 @@ diffspluerror[i,j]<-diffs[i,j]+FE*sr2*max(inp[c(i,j)])
 }}
 
 results<-row.template
-
-operations$relation.type
-
-k<-2
 
 print("find relations loop")
 for(k in 1:nrow(operations))
@@ -275,42 +275,32 @@ row[,"points"]<-1/row[,"diff.ppm"]
 return(row)
 }
 
-results
-row<-
-  results
-<-  rows.rel
-<-rel[which(rel$mz==results$mz[i]),T]
-i<-1
 
 add.rel<-function(results, rows.rel) {
-  rows.rel<-rows.rel[which(rows.rel$mz>rows.rel$mz.from), T]
-  for (i in 1:nrow(rows.rel)) {
-    results[i,elements]<-
-      results[
-        rows.rel$mz.from[i]
-        ==
-          results$mz
-              ,elements]
-    +
-      rows.rel[i,elements]    
-    results<-calc.diffs(results[i,T])
+ret<-row.template
+  for (j in 1:nrow(rows.rel)) {
+    tmp <-which(rows.rel$mz[j]==results$mz)
+    tmp2 <-which(rows.rel$mz.from[j]==results$mz)
+    if (length(tmp)==1&length(tmp2)==1) {
+      ret[j,elements]<-results[tmp2,elements] + rows.rel[j,elements]    
+      ret[j,"mz"]<-rows.rel[j, "mz"]
+      ret[j,T]<-calc.diffs(ret[j,T])
+      ret[j,c("mz.from", "relation.type","multiplier", "comment")]<-rows.rel[tmp2,c("mz.from", "relation.type","multiplier", "comment")]
+    }
   }
-  return(results)
+  return(ret[which(is.na(ret$m)==F), T])
 }  
 
-points.manipulation<-function(rows, arg=F)  {
-  if (arg==F) {return(rows)}  
+points.manipulation<-function(rows, arg=F, clean=F)  {
+  if(clean==T) {rows<-cleanup(rows)}
+  return(rows)  
 }
 
-bf<-kuja.bf
-rel<-kuja.rel
-arg=F
-i<-4
-results
-tmp
+# bf<-data2.bf
+# rel<-data2.c13.rel
+# clean=T
 
-
-merge<-function(bf, rel, arg=F) {
+merge<-function(bf, rel, arg=F, clean=T) {
   rel<-rel[rel$mz>rel$mz.from,T]
   results<-row.template
   tmp<-rbind(bf, rel)
@@ -321,18 +311,18 @@ merge<-function(bf, rel, arg=F) {
   for (i in 1:nr){
   print(paste(i, "/", nr))
   if (sum(rel$mz==results$mz[i])>0){
-    tmp<-rbind(
+    tmp3<-rbind(
       add.rel(results, rel[rel$mz==results$mz[i],T])
       , bf[bf$mz==results$mz[i],T])
-  } else {tmp<-bf[bf$mz==results$mz[i],T]}
-  tmp<-points.manipulation(tmp, arg=arg)
-  results[i,T]<-tmp[tmp$points==max(tmp$points),T]
-
+  } else {tmp3<-bf[bf$mz==results$mz[i],T]}
+  if (nrow(tmp3)>0){
+    tmp3<-points.manipulation(tmp3, arg=arg, clean=clean)
+    results[i,T]<-tmp3[which(tmp3$points==max(tmp3$points)),T]
+  }
   }
   return(results)
 }
 
-warnings()
 
 vanK.plot<-function(df, ylab="H:C", xlab="O:C", elements="CHO", ...) {
   x <- as.numeric(df$O) / (as.numeric(df$C) + as.numeric(df$C13))
@@ -347,17 +337,21 @@ if (elements == "CNO" & ylab=="H:C")
 }
   
   
-order.rows<-function(df, order="difference") {
-  if(order=="difference"|order=="dif"|order=="diff"|order=="d")
-  res<-df[order(abs(as.numeric(df$diff.ppm))),T]
-  #if(order=="NPSNa")
-  #res<-df[order(rowSums(as.numeric(df[,c("N", "P", "S", "Na")])))]
-  return(res)
-}
-
 dbe<-function(row) {
   return(1+row$C+row$C13+row$N/2-row$H/2)
 }
 
-
+cleanup<- function(rows) {
+  kill=F
+  for (i in 1:nrow(rows)) {
+     k1<-min(rows[i,elements])<0
+     k2<-rows$C+rows$C13<1
+     k3<-rows$H>(2+2*rows$C+2*rows$C13+rows$N)
+     k4<-rows$H>3*rows$C
+     k5<-rows$O>rows$C
+     k6<-rows$N>rows$C
+     if(k1|k2|k3|k4|k5|k6) {kill[i]<-T} else {kill[i]<-F}
+  }
+  return(rows[kill==F,T])
+}
 
