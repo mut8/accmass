@@ -1,11 +1,13 @@
+#we will need the "cluster" package to align masses
 require("cluster")
 
-#MS error margins
+#predefined error margins
 error=3E-6
 FE=error
 RE=2E-5
 C13E=1E-4
 
+#exact masses of isotopes (not all currently used)
 mass.e<-0.0005485
 mass.H1<-1.007825037
 mass.H2<-2.014101787
@@ -21,10 +23,10 @@ mass.S32<-31.9720718
 
 
 # define row.template and subsets thereoff
-row.template<-data.frame(matrix(ncol=17, nrow=0))
-colnames(row.template)<-c("mz","C","C13","H","N","O","S","P","Na","calc.mass", "difference", "diff.ppm", "points", "mz.from", "relation.type","multiplier", "comment")
+row.template<-data.frame(matrix(ncol=18, nrow=0))
+colnames(row.template)<-c("id","mz","C","C13","H","N","O","S","P","Na","calc.mass", "difference", "diff.ppm", "points", "from.id", "relation.type","multiplier", "comment")
 elements<-c("C", "H", "O", "N", "P", "S", "Na", "C13")
-numerics<-c(elements, "mz", "calc.mass", "difference", "diff.ppm", "points", "mz.from", "relation.type", "multiplier")
+numerics<-c(elements, "mz", "calc.mass", "difference", "diff.ppm", "points", "from.id", "relation.type", "multiplier")
 
 numberize<-function(rows){
   for (i in numerics) {
@@ -34,18 +36,18 @@ numberize<-function(rows){
 }
 
 iso.operations<-  row.template
-  iso.operations[1,T]<-c(NA,-1, 1, 0, 0, 0,0,0,0, NA, NA, NA, NA, NA,"+C13 -C",1, NA)
+  iso.operations[1,T]<-c(NA, NA,-1, 1, 0, 0, 0,0,0,0, NA, NA, NA, NA, NA,"+C13 -C",1, NA)
 
 
 operations<-  row.template
-  operations[1,T]<-c(NA, 1, 0, 2, 0, 0,0,0,0, NA, NA, NA, NA, NA,"+CH2",1, NA)
-  operations[2,T]<-c(NA, 1, 0, 4, 0,-1,0,0,0, NA, NA, NA, NA, NA,"+CH4 -O",1, NA)
-  operations[3,T]<-c(NA, 0, 0, 2, 0, 0,0,0,0, NA, NA, NA, NA, NA,"+H2",1, NA)
-  operations[4,T]<-c(NA, 2, 0, 4, 0, 1,0,0,0, NA, NA, NA, NA, NA,"+C2H4O",1, NA)
-  operations[5,T]<-c(NA, 1, 0, 0, 0, 2,0,0,0, NA, NA, NA, NA, NA,"+CO2",1, NA)
-  operations[6,T]<-c(NA, 2, 0, 2, 0, 1,0,0,0, NA, NA, NA, NA, NA,"+C2H2O",1, NA)
-  operations[7,T]<-c(NA, 0, 0, 0, 0, 1,0,0,0, NA, NA, NA, NA, NA,"+O",1, NA)
-  operations[8,T]<-c(NA, 1, 0, 0, 1, 0,0,0,0, NA, NA, NA, NA, NA,"+C2H2O",1, NA)
+  operations[1,T]<-c(NA, NA, 1, 0, 2, 0, 0,0,0,0, NA, NA, NA, NA, NA,"+CH2",1, NA)
+  operations[2,T]<-c(NA, NA, 1, 0, 4, 0,-1,0,0,0, NA, NA, NA, NA, NA,"+CH4 -O",1, NA)
+  operations[3,T]<-c(NA, NA, 0, 0, 2, 0, 0,0,0,0, NA, NA, NA, NA, NA,"+H2",1, NA)
+  operations[4,T]<-c(NA, NA, 2, 0, 4, 0, 1,0,0,0, NA, NA, NA, NA, NA,"+C2H4O",1, NA)
+  operations[5,T]<-c(NA, NA, 1, 0, 0, 0, 2,0,0,0, NA, NA, NA, NA, NA,"+CO2",1, NA)
+  operations[6,T]<-c(NA, NA, 2, 0, 2, 0, 1,0,0,0, NA, NA, NA, NA, NA,"+C2H2O",1, NA)
+  operations[7,T]<-c(NA, NA, 0, 0, 0, 0, 1,0,0,0, NA, NA, NA, NA, NA,"+O",1, NA)
+  operations[8,T]<-c(NA, NA, 1, 0, 0, 1, 0,0,0,0, NA, NA, NA, NA, NA,"+C2H2O",1, NA)
 
 
 
@@ -70,9 +72,12 @@ for (i in 1:nrow(iso.operations))
 ##findformula: algorithm to calculate sum formula from accurate mass
 ##
 
+x<-210
+
 findformula<-function(x, c.h.min=1/3, c.o.max=1, c13.max=2, c.n.max=1, s.max=3, p.max=3, Na.max=0, screen.error=3E-2, FE=3E-6) {
   
   results<-row.template
+  target<-c(x*(1-FE), x*(1+FE))
   
   #C max and C min calculate max/min number of C atoms (and sum of C+N+O atoms)
   
@@ -117,12 +122,12 @@ findformula<-function(x, c.h.min=1/3, c.o.max=1, c13.max=2, c.n.max=1, s.max=3, 
                     calc.mass<-c*mass.C12+n*mass.N14+o*mass.O16+h*mass.H1+c13*mass.C13+Na*mass.Na23+p*mass.P31+s*mass.S32
   
                     #check if calculated mass is within error margin
-                    if(calc.mass>x-(x*FE) & calc.mass<x+(x*FE))
+                    if(calc.mass>target[1] & calc.mass<target[2])
                     {
                       #print result
                       #print(paste("C", c, "C13", c13, "H", h, "N", n, "O", o,"P",p,"S",s,"Na",Na, "m=", calc.mass, "difference", calc.mass-x, "diff.ppm", 1E6*(calc.mass-x)/x))
                       tmp<-nrow(results)
-                      results[tmp+1, T]<-c(x, c, c13, h, n, o, s, p, Na, calc.mass, calc.mass-x, 1E6*(calc.mass-x)/x, 1E-6*abs(x/(calc.mass-x)), NA, NA,NA, "bruteforce")
+                      results[tmp+1, T]<-c(NA, x, c, c13, h, n, o, s, p, Na, calc.mass, calc.mass-x, 1E6*(calc.mass-x)/x, 1E-6*abs(x/(calc.mass-x)), NA, NA,NA, "bruteforce")
                     }
                   }
                 }
@@ -148,37 +153,38 @@ bforce<-function(mz, FE=3E-6, RE=2E-5, bruteforce.lim=500, verbose=T) {
   
   #add ascending m/z values to results dataframe
   mz<-sort(mz)
+  imax<-length(mz)
   
   #create result list, set colnames
   results<-row.template
 
   #subset of peaks with mz < mz.lim, nr of peaks analysed, initialize counter 
-  sel<-mz[which(mz<bruteforce.lim)]
-  nr<-length(sel)
-  count<-1
-  
+  i<-1
   # for each m/z found
-  for(i in 1:nr) {
-    print(paste(i,"/",nr,sep=""))
-        
-    #print(mz[i])
-      #attempt to find the formula using CHON
-      tmp<-findformula(sel[i], s.max=0, p.max=0, Na.max=0, c13.max=0)
-    
-      print("brief BF")
-    
-      #if no result is found...
-      if(nrow(tmp)==0) {
-        print("extensive BF")
-        
-        #try with CHONPSNa
-        tmp<-findformula(sel[i], c13.max=0)
+  for(i in 1:imax) {
+    print(paste(i,"/",imax,sep=""))
+        if(mz[i]<bruteforce.lim){
+            
+      #print(mz[i])
+        #attempt to find the formula using CHON
+        tmp<-findformula(mz[i], s.max=0, p.max=0, Na.max=0, c13.max=0)
+      
+        print("brief BF")
+      
+        #if no result is found...
+        if(nrow(tmp)==0) {
+          print("extensive BF")
+          
+          #try with CHONPSNa
+          tmp<-findformula(mz[i], c13.max=0)
+        }
+      
+      #if results were found..
+      if (nrow(tmp)>0){
+      #add all results found to the results list
+      tmp$id<-i
+      results<-rbind(results, tmp)
       }
-    
-    #if results were found..
-    if (nrow(tmp)>0){
-    #add all results found to the results list
-    results<-rbind(results, tmp)
     }
   }
   
@@ -189,12 +195,13 @@ bforce<-function(mz, FE=3E-6, RE=2E-5, bruteforce.lim=500, verbose=T) {
 
 plot.results<-function(res, ...) {
   tmp<-as.data.frame(table(res$mz))
-  plot(tmp[,1], tmp[,2], cex=.5, ylim=c(0,20), ylab="hits", xlab="mass nr")
+  plot(tmp[,1], tmp[,2], ylab="hits", xlab="mass nr")
 }
 
 
 findrelations<-function(inp, operations=operations, nmax=5, FE=FE){
-
+inp<-sort(inp)
+  
 kmax<-nrow(operations)
 imax<-length(inp)
 jmax<-imax
@@ -239,30 +246,35 @@ for(k in 1:nrow(operations))
           {
             nr<-nrow(results)
             results[(nr+1),c("C","C13","H","N","O","S","P","Na")]<-as.numeric(operations[k,c("C","C13","H","N","O","S","P","Na")])*n
-            results[(nr+1),"mz.from"]<-inp[j]
+            results[(nr+1),"from.id"]<-j
             results[(nr+1),"mz"]<-inp[i]
+            results[(nr+1),"id"]<-i
             results[(nr+1),"multiplier"]<-n*-1
             results[(nr+1),"relation.type"]<-operations[k, "relation.type"]
             results[(nr+1),"comment"]<-paste("relations, m/z difference =", diffs[i,j])
             results[(nr+1),T]<-calc.mass(results[nr+1,T])
-            results[(nr+1),"difference"]<-results[nr+1,"calc.mass"]+results[nr+1,"mz.from"]-results[nr+1,"mz"]
+            results[(nr+1),"difference"]<-results[nr+1,"calc.mass"]+results[nr+1,"from.id"]-results[nr+1,"mz"]
             results[(nr+1),"diff.ppm"]<-1E6*results[(nr+1),"difference"]/results[(nr+1),"calc.mass"]
             results[nr+1,T]<-numberize(results[nr+1,T])
 
             results[(nr+2),c("C","C13","H","N","O","S","P","Na")]<-as.numeric(operations[k,c("C","C13","H","N","O","S","P","Na")])*n*-1
-            results[(nr+2),"mz.from"]<-inp[i]
+            results[(nr+2),"from.id"]<-i
             results[(nr+2),"mz"]<-inp[j]
+            results[(nr+2),"id"]<-j
             results[(nr+2),"multiplier"]<-n*-1
             results[(nr+2),"relation.type"]<-operations[k, "relation.type"]
             results[(nr+2),"comment"]<-paste("relations (reverse), difference =", diffs[i,j])
             results[(nr+2),T]<-calc.mass(results[nr+2,T])
-            results[(nr+2),"difference"]<-results[nr+2,"calc.mass"]+results[nr+2,"mz.from"]-results[nr+2,"mz"]
+            results[(nr+2),"difference"]<-results[nr+2,"calc.mass"]+results[nr+2,"from.id"]-results[nr+2,"mz"]
             results[(nr+2),"diff.ppm"]<-1E6*results[(nr+2),"difference"]/results[(nr+2),"calc.mass"]
             hits<-hits+1
             results[nr+2,T]<-numberize(results[nr+2,T])
           }
   }
 }
+
+row.template[,"relation.type"]
+"relation.type"
 
 return(results[order(results$mz),T])
 }
@@ -275,22 +287,6 @@ row[,"points"]<-1/row[,"diff.ppm"]
 return(row)
 }
 
-
-add.rel<-function(results, rows.rel) {
-ret<-row.template
-  for (j in 1:nrow(rows.rel)) {
-    tmp <-which(rows.rel$mz[j]==results$mz)
-    tmp2 <-which(rows.rel$mz.from[j]==results$mz)
-    if (length(tmp)==1&length(tmp2)==1) {
-      ret[j,elements]<-results[tmp2,elements] + rows.rel[j,elements]    
-      ret[j,"mz"]<-rows.rel[j, "mz"]
-      ret[j,T]<-calc.diffs(ret[j,T])
-      ret[j,c("mz.from", "relation.type","multiplier", "comment")]<-rows.rel[tmp2,c("mz.from", "relation.type","multiplier", "comment")]
-    }
-  }
-  return(ret[which(is.na(ret$m)==F), T])
-}  
-
 points.manipulation<-function(rows, arg=F, clean=F)  {
   if(clean==T) {rows<-cleanup(rows)}
   return(rows)  
@@ -299,29 +295,6 @@ points.manipulation<-function(rows, arg=F, clean=F)  {
 # bf<-data2.bf
 # rel<-data2.c13.rel
 # clean=T
-
-merge<-function(bf, rel, arg=F, clean=T) {
-  rel<-rel[rel$mz>rel$mz.from,T]
-  results<-row.template
-  tmp<-rbind(bf, rel)
-  tmp2<-unique(tmp$mz)
-  results[1:length(tmp2), "mz"]<-tmp2
-    
-  nr<-length(results$mz)
-  for (i in 1:nr){
-  print(paste(i, "/", nr))
-  if (sum(rel$mz==results$mz[i])>0){
-    tmp3<-rbind(
-      add.rel(results, rel[rel$mz==results$mz[i],T])
-      , bf[bf$mz==results$mz[i],T])
-  } else {tmp3<-bf[bf$mz==results$mz[i],T]}
-  if (nrow(tmp3)>0){
-    tmp3<-points.manipulation(tmp3, arg=arg, clean=clean)
-    results[i,T]<-tmp3[which(tmp3$points==max(tmp3$points)),T]
-  }
-  }
-  return(results)
-}
 
 
 vanK.plot<-function(df, ylab="H:C", xlab="O:C", elements="CHO", ...) {
@@ -341,17 +314,58 @@ dbe<-function(row) {
   return(1+row$C+row$C13+row$N/2-row$H/2)
 }
 
+merge<-function(bf, rel, arg=F, clean=T) {
+  rel<-rel[rel$id>rel$from.id,T]
+  results<-row.template
+  nr.unique<-unique(c(bf$id, rel$id))
+  results[1:length(nr.unique), "id"]<-nr.unique
+  results$id<-sort(nr.unique)
+  nr<-length(results$id)
+  for (i in 1:nr){
+  print(paste(i, "/", nr))
+      #print(rel[rel$mz==results$mz[i],T])
+      #print(add.rel(results, rel[rel$mz==results$mz[i],T]))
+      #print(bf[bf$mz==results$mz[i],T])
+      tmp1<-rel[rel$id==results$id[i],T]
+      tmp1a<-tmp1[which(is.element(tmp1[,"from.id"], results$id)),T]
+        if (nrow(tmp1a)>0)
+              for (j in 1:nrow(tmp1a)) {
+                  tmp1a[j, elements]<-
+                    tmp1a[j,elements]+
+                    results[results$id==tmp1a[j,"from.id"], elements]
+                  tmp1a[j,T]<-calc.diffs(tmp1a[j,T])
+                }
+      tmp2<-bf[bf$id==results$id[i],T]
+      tmp3<-rbind(tmp1a, tmp2)
+      tmp4<-tmp3[is.na(tmp3$calc.mass)!=T,T]
+      print(tmp4)
+      if (nrow(tmp4)>0){
+        print(tmp4)
+        tmp5<-points.manipulation(tmp4, arg=arg, clean=clean)
+        print(tmp5)
+        if (sum(is.na(tmp5$calc.mass)!=T)>0 ) {
+          tmp6<-tmp5[which(tmp5$points==max(tmp3$points)),T]
+          print(tmp6)
+          results[i,2:ncol(results)]<-tmp6[1,2:ncol(tmp6)]
+        }
+      }
+  }
+  return(results)
+}
+
 cleanup<- function(rows) {
+#rows<-rows[-is.na(rows$calc.mass),T]
   kill=F
-  for (i in 1:nrow(rows)) {
+  for (i in which(is.na(rows$calc.mass)!=T)) {
      k1<-min(rows[i,elements])<0
-     k2<-rows$C+rows$C13<1
-     k3<-rows$H>(2+2*rows$C+2*rows$C13+rows$N)
-     k4<-rows$H>3*rows$C
-     k5<-rows$O>rows$C
-     k6<-rows$N>rows$C
+     k2<-rows$C[i]+rows$C13[i]<1
+     k3<-rows$H[i]>(2+2*rows$C[i]+2*rows$C13[i]+rows$N[i])
+     k4<-rows$H[i]>3*rows$C[i]
+     k5<-rows$O[i]>rows$C[i]
+     k6<-rows$N[i]>rows$C[i]
      if(k1|k2|k3|k4|k5|k6) {kill[i]<-T} else {kill[i]<-F}
   }
   return(rows[kill==F,T])
 }
+
 
