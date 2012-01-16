@@ -63,7 +63,7 @@ data2.merge<-merge(data2.bf, rbind(data2.rel, data2.c13.rel), arg=F, clean=T)
 pdf("vank.pdf", width=7, height=14)
 par(mfrow=c(2,1))
 vanK.plot(data2.merge, cex=0.4, ylim=c(0,1), elements="CNO")
-vanK.plot(data2.merge, cex=0.4, ylim=c(0,3))
+vanK.plot(data2.merge, cex=0.4, ylim=c(0,2.5))
 dev.off()
 
 
@@ -84,7 +84,7 @@ clean=T
 
 which(is.element(unique(data2.rel$mz), data2$mz)!=T)
 which(is.element(
-merge(data2.bf, rbind(data2.c13.rel,data2.rel), arg=F, clean=F)
+output<-merge(data2.bf, rbind(data2.c13.rel,data2.rel), arg=F, clean=F)
   , 
   unique(data2$mz)
   )==F)

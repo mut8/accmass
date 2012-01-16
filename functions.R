@@ -353,13 +353,17 @@ merge<-function(bf, rel, arg=F, clean=T) {
   return(results)
 }
 
+
+(results$H-2)/(results$C + results$C13)
+
 cleanup<- function(rows) {
 #rows<-rows[-is.na(rows$calc.mass),T]
   kill=F
   for (i in which(is.na(rows$calc.mass)!=T)) {
      k1<-min(rows[i,elements])<0
      k2<-rows$C[i]+rows$C13[i]<1
-     k3<-rows$H[i]>(2+2*rows$C[i]+2*rows$C13[i]+rows$N[i])
+#     k3<-rows$H[i]>(2+2*rows$C[i]+2*rows$C13[i]+rows$N[i])
+     k3<-rows$H[i]>(2+2*rows$C[i]+2*rows$C13[i])
      k4<-rows$H[i]>3*rows$C[i]
      k5<-rows$O[i]>rows$C[i]
      k6<-rows$N[i]>rows$C[i]
