@@ -344,7 +344,7 @@ merge<-function(bf, rel, arg=F, clean=T) {
         tmp5<-points.manipulation(tmp4, arg=arg, clean=clean)
         print(tmp5)
         if (sum(is.na(tmp5$calc.mass)!=T)>0 ) {
-          tmp6<-tmp5[which(tmp5$points==max(tmp3$points)),T]
+          tmp6<-tmp5[which(tmp5$points==max(tmp5$points)),T]
           print(tmp6)
           results[i,2:ncol(results)]<-tmp6[1,2:ncol(tmp6)]
         }

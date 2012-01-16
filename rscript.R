@@ -84,7 +84,7 @@ clean=T
 
 which(is.element(unique(data2.rel$mz), data2$mz)!=T)
 which(is.element(
-merge(data2$mz, data2.bf, data2.c13.rel, arg=F, clean=T)
+merge(data2.bf, rbind(data2.c13.rel,data2.rel), arg=F, clean=F)
   , 
   unique(data2$mz)
   )==F)
@@ -198,8 +198,8 @@ kuja.
 rel$id
 i<-83
 rel
-bf<-kuja.bf
-rel<-kuja.rel
+bf<-data2.bf
+rel<-data2.rel
 sink("dump")
 merge<-function(bf, rel, arg=F, clean=T) {
   rel<-rel[rel$id>rel$from.id,T]
@@ -231,7 +231,7 @@ merge<-function(bf, rel, arg=F, clean=T) {
         tmp5<-points.manipulation(tmp4, arg=arg, clean=clean)
         print(tmp5)
         if (sum(is.na(tmp5$calc.mass)!=T)>0 ) {
-          tmp6<-tmp5[which(tmp5$points==max(tmp3$points)),T]
+          tmp6<-tmp5[which(tmp5$points==max(tmp5$points)),T]
           print(tmp6)
           results[i,2:ncol(results)]<-tmp6[1,2:ncol(tmp6)]
         }
