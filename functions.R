@@ -33,21 +33,18 @@ numberize<-function(rows){
     rows[,i]<-as.numeric(rows[,i])
   }
   return(rows)
-}
-
-iso.operations<-  row.template
-  iso.operations[1,T]<-c(NA, NA,-1, 1, 0, 0, 0,0,0,0, NA, NA, NA, NA, NA,"+C13 -C",1, NA)
-
+}  
 
 operations<-  row.template
-  operations[1,T]<-c(NA, NA, 1, 0, 2, 0, 0,0,0,0, NA, NA, NA, NA, NA,"+CH2",1, NA)
-  operations[2,T]<-c(NA, NA, 1, 0, 4, 0,-1,0,0,0, NA, NA, NA, NA, NA,"+CH4 -O",1, NA)
-  operations[3,T]<-c(NA, NA, 0, 0, 2, 0, 0,0,0,0, NA, NA, NA, NA, NA,"+H2",1, NA)
-  operations[4,T]<-c(NA, NA, 2, 0, 4, 0, 1,0,0,0, NA, NA, NA, NA, NA,"+C2H4O",1, NA)
-  operations[5,T]<-c(NA, NA, 1, 0, 0, 0, 2,0,0,0, NA, NA, NA, NA, NA,"+CO2",1, NA)
-  operations[6,T]<-c(NA, NA, 2, 0, 2, 0, 1,0,0,0, NA, NA, NA, NA, NA,"+C2H2O",1, NA)
-  operations[7,T]<-c(NA, NA, 0, 0, 0, 0, 1,0,0,0, NA, NA, NA, NA, NA,"+O",1, NA)
-  operations[8,T]<-c(NA, NA, 1, 0, 0, 1, 0,0,0,0, NA, NA, NA, NA, NA,"+C2H2O",1, NA)
+  operations[1,T]<-c(NA, NA, 1, 0, 2, 0, 0,0,0,0, NA, NA, NA, NA, NA,"+CH2",5, NA)
+  operations[2,T]<-c(NA, NA, 1, 0, 4, 0,-1,0,0,0, NA, NA, NA, NA, NA,"+CH4 -O",5, NA)
+  operations[3,T]<-c(NA, NA, 0, 0, 2, 0, 0,0,0,0, NA, NA, NA, NA, NA,"+H2",5, NA)
+  operations[4,T]<-c(NA, NA, 2, 0, 4, 0, 1,0,0,0, NA, NA, NA, NA, NA,"+C2H4O",5, NA)
+  operations[5,T]<-c(NA, NA, 1, 0, 0, 0, 2,0,0,0, NA, NA, NA, NA, NA,"+CO2",5, NA)
+  operations[6,T]<-c(NA, NA, 2, 0, 2, 0, 1,0,0,0, NA, NA, NA, NA, NA,"+C2H2O",5, NA)
+  operations[7,T]<-c(NA, NA, 0, 0, 0, 0, 1,0,0,0, NA, NA, NA, NA, NA,"+O",5, NA)
+  operations[8,T]<-c(NA, NA, 1, 0, 0, 1, 0,0,0,0, NA, NA, NA, NA, NA,"+C2H2O",5, NA)
+  operations[9,T]<-c(NA, NA,-1, 1, 0, 0, 0,0,0,0, NA, NA, NA, NA, NA,"+C13 -C",1, NA)
 
 
 
@@ -145,14 +142,13 @@ findformula<-function(x, c.h.min=1/3, c.o.max=1, c13.max=2, c.n.max=1, s.max=3, 
   return(results)
 }
 
-bforce<-function(mz, FE=3E-6, RE=2E-5, bruteforce.lim=500, verbose=T) {
+bforce<-function(mz, id, FE=3E-6, RE=2E-5, bruteforce.lim=500, verbose=T) {
 
 #  #create result dataframe, set colnames
 #  data<-data.frame(matrix(nrow=length(mz), ncol=12))
 #  colnames(data)<-c("mz","C","C13","H","N","O","S","P","Na","calc.mass", "difference", "diff.ppm")
   
   #add ascending m/z values to results dataframe
-  mz<-sort(mz)
   imax<-length(mz)
   
   #create result list, set colnames
@@ -182,7 +178,7 @@ bforce<-function(mz, FE=3E-6, RE=2E-5, bruteforce.lim=500, verbose=T) {
       #if results were found..
       if (nrow(tmp)>0){
       #add all results found to the results list
-      tmp$id<-i
+      tmp$id<-id[i]
       results<-rbind(results, tmp)
       }
     }
@@ -199,7 +195,7 @@ plot.results<-function(res, ...) {
 }
 
 
-findrelations<-function(inp, operations=operations, nmax=5, FE=FE){
+findrelations<-function(inp, id, operations=operations, nmax=5,FE=FE){
 inp<-sort(inp)
   
 kmax<-nrow(operations)
@@ -235,7 +231,9 @@ print("find relations loop")
 for(k in 1:nrow(operations))
 {
   print(paste("looking for relations:", operations$relation.type[k], "hits:", hits))
-  for(n in c(-nmax:-1, 1:nmax)) 
+  for(n in 
+      c(-1*operations$multiplier[k]:1, 1:operations$multiplier[k])
+      ) 
   {
     print(paste("multiplicator", n))
     x<- as.numeric(operations$calc.mass[k])* n
@@ -248,8 +246,8 @@ for(k in 1:nrow(operations))
             results[(nr+1),c("C","C13","H","N","O","S","P","Na")]<-as.numeric(operations[k,c("C","C13","H","N","O","S","P","Na")])*n
             results[(nr+1),"from.id"]<-j
             results[(nr+1),"mz"]<-inp[i]
-            results[(nr+1),"id"]<-i
-            results[(nr+1),"multiplier"]<-n*-1
+            results[(nr+1),"id"]<-id[i]
+            results[(nr+1),"multiplier"]<-n
             results[(nr+1),"relation.type"]<-operations[k, "relation.type"]
             results[(nr+1),"comment"]<-paste("relations, m/z difference =", diffs[i,j])
             results[(nr+1),T]<-calc.mass(results[nr+1,T])
@@ -260,8 +258,8 @@ for(k in 1:nrow(operations))
             results[(nr+2),c("C","C13","H","N","O","S","P","Na")]<-as.numeric(operations[k,c("C","C13","H","N","O","S","P","Na")])*n*-1
             results[(nr+2),"from.id"]<-i
             results[(nr+2),"mz"]<-inp[j]
-            results[(nr+2),"id"]<-j
-            results[(nr+2),"multiplier"]<-n*-1
+            results[(nr+2),"id"]<-id[j]
+            results[(nr+2),"multiplier"]<-n
             results[(nr+2),"relation.type"]<-operations[k, "relation.type"]
             results[(nr+2),"comment"]<-paste("relations (reverse), difference =", diffs[i,j])
             results[(nr+2),T]<-calc.mass(results[nr+2,T])
@@ -314,7 +312,7 @@ dbe<-function(row) {
   return(1+row$C+row$C13+row$N/2-row$H/2)
 }
 
-merge<-function(bf, rel, arg=F, clean=T) {
+merge.results<-function(bf, rel, arg=F, clean=T) {
   rel<-rel[rel$id>rel$from.id,T]
   results<-row.template
   nr.unique<-unique(c(bf$id, rel$id))
@@ -373,3 +371,20 @@ cleanup<- function(rows) {
 }
 
 
+data<-kuja
+mz<-"mz"
+
+run.all<-function(data, mz) {
+  
+data<-data[order(data[,mz]),T]
+id<-1:nrow(data)
+ret<-cbind(id, data )
+data.bf<-bforce(ret[,"mz"], ret$id)
+data.rel<-  findrelations(ret[,"mz"], ret$id, operations=operations, FE=FE)
+data.merge<-merge.results(data.bf, data.rel)
+
+ret<-  merge(ret, data.merge, all.x=T, by="id")
+
+return(ret)
+
+}
