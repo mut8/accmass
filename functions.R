@@ -26,7 +26,7 @@ mass.S32<-31.9720718
 row.template<-data.frame(matrix(ncol=18, nrow=0))
 colnames(row.template)<-c("id","mz","C","C13","H","N","O","S","P","Na","calc.mass", "difference", "diff.ppm", "points", "from.id", "relation.type","multiplier", "comment")
 elements<-c("C", "H", "O", "N", "P", "S", "Na", "C13")
-numerics<-c(elements, "mz", "calc.mass", "difference", "diff.ppm", "points", "from.id", "relation.type", "multiplier")
+numerics<-c(elements, "mz", "calc.mass", "difference", "diff.ppm", "points", "from.id",  "multiplier")
 
 numberize<-function(rows){
   for (i in numerics) {
@@ -61,15 +61,12 @@ calc.mass<-function(data) {
 for (i in 1:nrow(operations))
   operations[i,T]<-calc.mass(operations[i,T])
 
-for (i in 1:nrow(iso.operations))
-  iso.operations[i,T]<-calc.mass(iso.operations[i,T])
+
 
 
 ##
 ##findformula: algorithm to calculate sum formula from accurate mass
 ##
-
-x<-210
 
 findformula<-function(x, c.h.min=1/3, c.o.max=1, c13.max=2, c.n.max=1, s.max=3, p.max=3, Na.max=0, screen.error=3E-2, FE=3E-6) {
   
@@ -142,140 +139,130 @@ findformula<-function(x, c.h.min=1/3, c.o.max=1, c13.max=2, c.n.max=1, s.max=3, 
   return(results)
 }
 
-bforce<-function(mz, id, FE=3E-6, RE=2E-5, bruteforce.lim=500, verbose=T) {
+bforce<-function(data, FE=3E-6, RE=2E-5, bruteforce.lim=500, verbose=T, clean=T, arg=F) {
 
 #  #create result dataframe, set colnames
 #  data<-data.frame(matrix(nrow=length(mz), ncol=12))
 #  colnames(data)<-c("mz","C","C13","H","N","O","S","P","Na","calc.mass", "difference", "diff.ppm")
   
   #add ascending m/z values to results dataframe
-  imax<-length(mz)
+  imax<-length(data$mz)
   
   #create result list, set colnames
   results<-row.template
 
   #subset of peaks with mz < mz.lim, nr of peaks analysed, initialize counter 
-  i<-1
   # for each m/z found
+  #for(i in 1:179) {
   for(i in 1:imax) {
     print(paste(i,"/",imax,sep=""))
-        if(mz[i]<bruteforce.lim){
+
+      tmp<-row.template      
+    
+        #ad all results found to the results list    print(paste(i,"/",imax,sep=""))
+        if(data$mz[i]<bruteforce.lim){
+      
+        #print(mz[i])
+          #attempt to find the formula using CHON
+          print("brief BF")
+          tmp<-findformula(data$mz[i], s.max=0, p.max=0, Na.max=0, c13.max=0)
+
+          #if no result is found...
+          if(nrow(tmp)==0) {
+            print("extensive BF")
             
-      #print(mz[i])
-        #attempt to find the formula using CHON
-        tmp<-findformula(mz[i], s.max=0, p.max=0, Na.max=0, c13.max=0)
+            #try with CHONPSNa
+            tmp<-findformula(data$mz[i], c13.max=0, Na.max=0)
+          }
+        
+        #ad all results found to the results list
       
-        print("brief BF")
-      
-        #if no result is found...
-        if(nrow(tmp)==0) {
-          print("extensive BF")
-          
-          #try with CHONPSNa
-          tmp<-findformula(mz[i], c13.max=0)
-        }
-      
-      #if results were found..
-      if (nrow(tmp)>0){
-      #add all results found to the results list
-      tmp$id<-id[i]
-      results<-rbind(results, tmp)
+            if(nrow(tmp)>0)
+        tmp$id<-data$id[i]
       }
-    }
+    
+    tmp2 <- 
+      findrelations(data[i, T], results,operations=operations, FE=FE)
+    tmp3<-
+      points.manipulation(rbind(tmp2, tmp), arg=arg, clean=clean)
+    if (nrow(tmp3) > 0) {
+    tmp4<-tmp3[which(tmp3$points==max(tmp3$points)),T]
+      if (nrow(tmp4) > 0) {
+        nr<-nrow(results) 
+        results[nr+1,T]<-tmp4[1,T] 
+        rm(tmp4)
+      }
+      rm(tmp3)
+    }      
+  rm(tmp)
+  rm(tmp2)
   }
   
-  # create plot
-  plot.results(results)
-  return(results[order(results$mz), T])
-}
-
-plot.results<-function(res, ...) {
-  tmp<-as.data.frame(table(res$mz))
-  plot(tmp[,1], tmp[,2], ylab="hits", xlab="mass nr")
+  return(results)
 }
 
 
-findrelations<-function(inp, id, operations=operations, nmax=5,FE=FE){
-inp<-sort(inp)
+findrelations<-function(row, results, operations=operations,FE=FE){
+
+  if(nrow(results)==0) {return(row.template)}
   
 kmax<-nrow(operations)
-imax<-length(inp)
-jmax<-imax
-hits=0  
+imax<-length(results)
   
+diffs<-0
 print("calculate diffs")
-diffs<-matrix(nrow=length(inp), ncol=length(inp))
-for (i in 1:length(inp))
-for (j in 1:length(inp)) {
-  diffs[i,j]<-inp[i]-inp[j]
-}
+for (i in 1:nrow(results))
+  diffs[i] <- row$mz - results$mz[i]
 
 print("calculate diff error margins")
 
-diffsminerror<-diffs
-diffspluerror<-diffs
+margin<-sqrt(2)*row$mz*FE
 
-sr2<-sqrt(2)
+diffsminerror<-diffs-margin
+diffspluerror<-diffs+margin
 
-for (i in 1:imax) {
-print(paste("calculate diff error margins", i, "/", imax))
-  for (j in 1:jmax) {
-
-diffsminerror[i,j]<-diffs[i,j]-FE*sr2*max(inp[c(i,j)])
-diffspluerror[i,j]<-diffs[i,j]+FE*sr2*max(inp[c(i,j)])
-}}
-
-results<-row.template
+ret<-row.template
 
 print("find relations loop")
 for(k in 1:nrow(operations))
 {
-  print(paste("looking for relations:", operations$relation.type[k], "hits:", hits))
-  for(n in 
-      c(-1*operations$multiplier[k]:1, 1:operations$multiplier[k])
-      ) 
-  {
-    print(paste("multiplicator", n))
-    x<- as.numeric(operations$calc.mass[k])* n
-    mat<-diffspluerror > x & diffsminerror < x 
-      for (i in 2:(imax))
-        for (j in 1:(i-1))
-          if (mat[i,j])
-          {
-            nr<-nrow(results)
-            results[(nr+1),c("C","C13","H","N","O","S","P","Na")]<-as.numeric(operations[k,c("C","C13","H","N","O","S","P","Na")])*n
-            results[(nr+1),"from.id"]<-j
-            results[(nr+1),"mz"]<-inp[i]
-            results[(nr+1),"id"]<-id[i]
-            results[(nr+1),"multiplier"]<-n
-            results[(nr+1),"relation.type"]<-operations[k, "relation.type"]
-            results[(nr+1),"comment"]<-paste("relations, m/z difference =", diffs[i,j])
-            results[(nr+1),T]<-calc.mass(results[nr+1,T])
-            results[(nr+1),"difference"]<-results[nr+1,"calc.mass"]+results[nr+1,"from.id"]-results[nr+1,"mz"]
-            results[(nr+1),"diff.ppm"]<-1E6*results[(nr+1),"difference"]/results[(nr+1),"calc.mass"]
-            results[nr+1,T]<-numberize(results[nr+1,T])
-
-            results[(nr+2),c("C","C13","H","N","O","S","P","Na")]<-as.numeric(operations[k,c("C","C13","H","N","O","S","P","Na")])*n*-1
-            results[(nr+2),"from.id"]<-i
-            results[(nr+2),"mz"]<-inp[j]
-            results[(nr+2),"id"]<-id[j]
-            results[(nr+2),"multiplier"]<-n
-            results[(nr+2),"relation.type"]<-operations[k, "relation.type"]
-            results[(nr+2),"comment"]<-paste("relations (reverse), difference =", diffs[i,j])
-            results[(nr+2),T]<-calc.mass(results[nr+2,T])
-            results[(nr+2),"difference"]<-results[nr+2,"calc.mass"]+results[nr+2,"from.id"]-results[nr+2,"mz"]
-            results[(nr+2),"diff.ppm"]<-1E6*results[(nr+2),"difference"]/results[(nr+2),"calc.mass"]
-            hits<-hits+1
-            results[nr+2,T]<-numberize(results[nr+2,T])
-          }
+  print(paste("looking for relations:", operations$relation.type[k]))
+  for(n in c(-1*operations$multiplier[k]:1, 1:operations$multiplier[k])) {
+#    print(paste("multiplicator", n))
+    x <- as.numeric(operations$calc.mass[k])* n
+    mat<- results$id[which(diffspluerror > x & diffsminerror < x)]
+#    print(length(mat))
+      for (i in mat)
+        {
+            nr<-nrow(ret)
+            print("hit")
+            new.row<-row.template
+#            print(new.row)
+            new.row[1,c("id", "mz")]<-row[,c("id", "mz")]
+#            print(new.row)
+            new.row[1,elements]<-
+              as.numeric(operations[k,elements])*n+ results[results$id==i, elements]
+#            print(new.row)
+            new.row[1,"from.id"]<-i
+#            print(new.row)
+            new.row[1,"multiplier"]<-n
+#            print(new.row)
+            new.row[1,"relation.type"]<-operations[k, "relation.type"]
+#            print(new.row)
+            new.row[1,"comment"]<-paste("relations, m/z difference =", diffs[i])
+#            print(new.row)
+            new.row<-calc.diffs(new.row)
+#            print(new.row)
+            new.row<-numberize(new.row)
+#            print(new.row)
+                  ret<-rbind(ret, new.row)
+        }
   }
 }
 
-row.template[,"relation.type"]
-"relation.type"
-
-return(results[order(results$mz),T])
+return(ret)
 }
+
 
 calc.diffs<-function(row) {
 row<-calc.mass(row)
@@ -287,9 +274,10 @@ return(row)
 
 points.manipulation<-function(rows, arg=F, clean=F)  {
   if(clean==T) {rows<-cleanup(rows)}
+  if(arg=="minNS") {rows$points<-1/(rows$N+rows$S)}
+  if(arg=="minNS.diff") {rows$points<-1000/(rows$N+rows$S)+1/rows$diff.ppm}
   return(rows)  
 }
-
 # bf<-data2.bf
 # rel<-data2.c13.rel
 # clean=T
@@ -352,16 +340,14 @@ merge.results<-function(bf, rel, arg=F, clean=T) {
 }
 
 
-(results$H-2)/(results$C + results$C13)
-
 cleanup<- function(rows) {
 #rows<-rows[-is.na(rows$calc.mass),T]
   kill=F
   for (i in which(is.na(rows$calc.mass)!=T)) {
      k1<-min(rows[i,elements])<0
      k2<-rows$C[i]+rows$C13[i]<1
-#     k3<-rows$H[i]>(2+2*rows$C[i]+2*rows$C13[i]+rows$N[i])
-     k3<-rows$H[i]>(2+2*rows$C[i]+2*rows$C13[i])
+     k3<-rows$H[i]>(2+2*rows$C[i]+2*rows$C13[i]+rows$N[i])
+#     k3<-rows$H[i]>(2+2*rows$C[i]+2*rows$C13[i])
      k4<-rows$H[i]>3*rows$C[i]
      k5<-rows$O[i]>rows$C[i]
      k6<-rows$N[i]>rows$C[i]
@@ -371,8 +357,6 @@ cleanup<- function(rows) {
 }
 
 
-data<-kuja
-mz<-"mz"
 
 run.all<-function(data, mz) {
   
@@ -388,3 +372,62 @@ ret<-  merge(ret, data.merge, all.x=T, by="id")
 return(ret)
 
 }
+
+
+test.el<-function(sample, results){
+res<-1
+for (i in sample$id) {
+  if (length(which(results$id==sample$id[i]))==0)
+    {res[i]=NA} else {
+    if (sum(sample[i, elements]!=results[results$id==sample$id[i], elements])>0) {res[i]<-F} else {res[i]<-T}
+  }
+}
+res2<-data.frame(not.det=sum(is.na(res)), correct.det=sum(res[is.na(res)==F]==T), false.found=sum(res[is.na(res)==F]==F))
+return(res2)
+}
+
+
+
+create.synth<-function(dat,IE=1E-6, n.sel=60, n.synth=1000) {
+
+synth<-row.template
+synth [1:n.sel,c("C", "H", "N", "S", "O", "P")]<-
+  dat[sample(1:nrow(dat),n.sel, replace=F),c("C", "H", "N", "S", "O", "P")]
+
+for (el in elements)
+synth[is.na(synth[,el]),el]<-0
+for (i in 1: nrow(synth))
+synth[i,T]<-calc.mass(synth[i,T])
+
+operations<-operations[1:8,T]
+
+for(i in 1:(n.synth-nrow(synth))) {
+  print(paste(i, "/", (n.synth-n.sel)))
+  new.row<-row.template
+  new.row<-synth[sample(1:nrow(synth),1),T]
+  new.row[,elements]<-as.numeric(operations[sample(1:nrow(operations), 1),elements])*sample(1:5, 1)+as.numeric(new.row[,elements])
+  
+  new.row<-calc.mass(new.row)
+  synth<-rbind(synth, new.row)
+}
+
+synth$mz<-synth$calc.mass*(1+rnorm(nrow(synth))*IE)
+synth<-synth[order(synth$mz),T]
+synth$id<-1:nrow(synth)
+return(synth)
+}
+
+test.alg<-function(IE=1E-6, n=10, FE=1E-6, n.sel=60, n.synth=1000) {
+ret<-data.frame(matrix(ncol=3, nrow=0))
+colnames(ret)<-c("not.det", "correct.det", "false.det")
+
+for (i in 1:n) {
+
+  sample<-create.synth(kuja, IE=IE, n.sel=n.sel, n.synth=n.synth)
+  results<-bforce(sample, FE=FE)
+  ret[i,T]<-test.el(sample, results)
+}
+return(ret)  
+}
+
+

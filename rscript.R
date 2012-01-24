@@ -1,273 +1,247 @@
-
-
 setwd("~/Documents/accmass")
 source("functions.R")
-#sink("output")
-#load data
 
-print(Sys.time())
-print("load data")
-data1<-read.csv("raw_data/test2.csv")
-kuja<-read.csv("raw_data/kujawinski2006.csv")
-
-data1[c("C13", "N15", "H2", "O18")]<-0
-data1$mz<-H.substract(data1$mz)
-
-#set Signal to Noise limit
-SN.lim<-3
-
-#order mz ascending
-data1<-data1[order(data1$mz),T]
-
-# remove masses below S:N
-data2<-data1[data1$Intensity>SN.lim*data1$Noise,T]
-
-data2
-
-dist<-dist(data2$mz[1:50])
-
-merge(kuja.bf, kuja.rel, clean=T)
-
-head(data2.bf)
-print(Sys.time())
-print ("bruteforce")
-data2.bf<-bforce(data2$mz, verbose=F)
-kuja.bf<-bforce(kuja$mz  , verbose=F)
-
-findformula(110)
-
-kuja.rel<-findrelations(kuja$mz, operations=operations, FE=FE, nmax=5)
-
-kuja.rel[,"id"]
-
-warnings()
-
-length(unique(data2.rel$mz))
-length(unique(data2.bf$mz))
-length(unique(c(data2.rel$mz, data2.bf$mz))
+files<-c(
+"10G_Laubextrakt.csv",
+"11G_Laubextrakt.csv",
+"12G_Laubextrakt.csv",
+"1BFE0_Laubextrakt.csv",
+"2BFE1_Laubextrakt.csv",
+"3BFE_Laubextrakt.csv",
+"4B_Laubextrakt.csv",
+"5B_Laubextrakt.csv",
+"6B_Laubextrakt.csv",
+"7GFE0_1_Laubextrakt.csv",
+"8GFE_Laubextrakt.csv",
+"9GFE_Laubextrakt.csv",
+"W29112010_Laubextrakt.csv",
+"WPETACMEOH_G_Laubextrakt.csv",
+"WPETACMEOH_MQ_Laubextrakt.csv"
 )
-print(Sys.time())
-print ("C13 isotopes")
-data2.c13.rel<-findrelations(data2$mz, operations=iso.operations, FE=FE, nmax=1)
 
 
-print ("relations") 
-data2.rel<-findrelations(data2$mz, operations=operations, FE=FE, nmax=5)
-print(Sys.time())
+dir<-"data_litter/"
+for (i in 1:length(files)) {
+  data1<-read.csv(paste(dir, files[i], sep=""))
+  data1<-data1[8:nrow(data1), 1:3]
+  colnames(data1)<-c("mz", "Intensity", "rel.int")
+  sample<-rep(files[i], nrow(data1))
+  data1<-cbind(data1, sample)
+  if (i == 1) {data.merge<-data1} else {data.merge<-rbind(data.merge, data1)}
+}
 
-plot.results(data2.rel.merge)
-<-rbind(data2.rel, data2.c13.rel)
+data.merge2<-data.merge
+data.merge2$mz<-as.numeric(as.character(data.merge$mz))
+data.merge2$Intensity<-as.numeric(as.character(data.merge$Intensity))
+data.merge2$rel.int<-as.numeric(as.character(data.merge$rel.int))
 
-data2.merge<-merge(data2.bf, rbind(data2.rel, data2.c13.rel), arg=F, clean=T)
-      hplot.results(data2.rel.merge, ylim=c(0,5))
-      )
+data1[8:, T]
+data.red<-data.merge2[data.merge2$rel.int>1, T]
 
-pdf("vank.pdf", width=7, height=14)
-par(mfrow=c(2,1))
-vanK.plot(data2.merge, cex=0.4, ylim=c(0,1), elements="CNO")
-vanK.plot(data2.merge, cex=0.4, ylim=c(0,2.5))
+data.red<-data.red[order(data.red$mz),T]
+
+dist<-dist(data.red$mz)
+
+mz.min<-min(data.red$mz)
+mz.max<-max(data.red$mz)
+
+(mz.max-mz.min)/20
+
+data.red2<-data.red
+
+data.red2$groups<-0
+groups.max<-0
+for (i in 80+(0:40)*40) {
+  print(paste(i, i+40, nrow(data.red2[data.red2$mz>i & data.red2$mz < i + 40,T])))
+dist<-dist(data.red2$mz[data.red2$mz>i & data.red2$mz < i + 40])  
+clust<-hclust(dist)
+data.red2$groups[data.red2$mz>i & data.red2$mz < i + 40]<-cutree(clust, h=(i+20)*3E-6)+groups.max
+groups.max<-max(data.red2$groups)
+}
+
+dist<-dist(data.red2$mz[data.red2$mz>i])  
+clust<-hclust(dist)
+data.red2$groups[data.red2$mz>i]<-cutree(clust, h=(i+20)*1E-6)+groups.max
+groups2.max<-max(data.red2$groups)
+
+data.3a<-data.frame(unique(data.red2$groups))
+data.4a<-cbind(data.3a,  tapply(data.red2$mz, data.red2$groups, mean), tapply(data.red2$mz, data.red2$groups, sd))
+
+colnames(data.4a)<-c("id", "mz", "mz.sd")
+
+head(data.4a)
+$data.3a
+nrow(data.4)
+
+results.data.4a.3ppm<-results.data.4a
+results.data.4a.3ppm.minNS<-bforce(H.substract(data.4a), arg="minNS")
+
+results.data.4a$id<-ceiling(results.data.4a$id)+1
+results.data.4a.3ppm.minNS$id<-ceiling(results.data.4a.3ppm.minNS$id)
+
+
+merge()
+
+pdf("vank2_minppm_3ppm.pdf", height=10, width=6)
+
+par(mfrow=c(2,1), tck=0.01)
+
+for(i in 1:length(files)) {
+results.file.merge<-
+  merge(data.red2[data.red2$sample==files[i],T], results.data.4a.3ppm, all.x=T, by.x="groups", by.y="id")
+cex=(log(results.file.merge$Intensity)-min(log(results.file.merge$Intensity)))/(max(log(results.file.merge$Intensity))-min(log(results.file.merge$Intensity)))
+
+par(mar=c(0,4.1,4.1,2.1))
+vanK.plot(results.file.merge, cex=cex, main=files[i], elements="CNO", xaxt="n")
+axis(1, labels=F)
+axis(3, labels=F)
+axis(4, labels=F)
+par(mar=c(4.1,4.1,0,2.1))
+vanK.plot(results.file.merge, cex=cex*0.7)  
+axis(3, labels=F)
+axis(4, labels=F)
+}
 dev.off()
 
 
-head(data2.rel)
-mz<-data2$mz
-rel<-data2.rel.merge
-bf<-data2.bf
-rel
-results
-length(tmp2)
-clean=F
+pdf("vank2_minNS_3ppm.pdf", height=10, width=6)
 
-length(unique(rel$mz))
-length(unique(bf$mz))
+par(mfrow=c(2,1), tck=0.01)
 
-length(unique(c(rel$mz, bf$mz)))
-clean=T
+for(i in 1:length(files)) {
+results.file.merge<-
+  merge(data.red2[data.red2$sample==files[i],T], 
+results.data.4a.3ppm.minNS, all.x=T, by.x="groups", by.y="id")
+cex=(log(results.file.merge$Intensity)-min(log(results.file.merge$Intensity)))/(max(log(results.file.merge$Intensity))-min(log(results.file.merge$Intensity)))
 
-which(is.element(unique(data2.rel$mz), data2$mz)!=T)
-which(is.element(
-output<-merge(data2.bf, rbind(data2.c13.rel,data2.rel), arg=F, clean=F)
-  , 
-  unique(data2$mz)
-  )==F)
-
-merge
-
-output<-merge(mz, bf, rel, arg=F, clean=T)
-output
-vanK.plot
-  results[results$C13==NA,T]
-  )
-ylim=c()
-rel[rel$mz>500,T]
-
-hist(data2.merge$diff.ppm)
-plot.results(
-  data2.merge[3000:3100,T]
-             )
-plot(
-  output$mz
-  , 
-  abs(output$diff.ppm)
-  )
-plot.results(output)
-
-?class
-data2.rel.bak<-data2.rel
-data2.bf.bak<-data2.bf
-
-for (i in 1:length(data2.rel))
-  
-  data2.rel[[i]]<-asnumberize(data2.rel[[i]])
-
-asnumberize<-function(rows) {
-  rows[,elements]<-as.numeric(rows[,elements])  
+par(mar=c(0,4.1,4.1,2.1))
+vanK.plot(results.file.merge, cex=cex, main=files[i], elements="CNO", xaxt="n")
+axis(1, labels=F)
+axis(3, labels=F)
+axis(4, labels=F)
+par(mar=c(4.1,4.1,0,2.1))
+vanK.plot(results.file.merge, cex=cex*0.7)  
+axis(3, labels=F)
+axis(4, labels=F)
 }
+dev.off()
 
 
-  
-  
-}
+results.file.merge
+i<-1
 
-#data2.rel<-data2.rel.bak
-#data2.bf<-data2.bf.bak
-
-#order.rows(data2.bf[[606]])
-
-
-  
-nrrel
-nrbf
-from
-data2.rel[[i]]
-i<-606
-from
-j<-1
-j
-
-data2.rel[[606]]
-data2.merge[[606]]
-
-d
-warnings()
-
-data2.bf
- <-data2.bf[[2]]
-data2.merge
-<- data2.bf
-data2.bf
-  rm(
-    data2.merge[[606]]
-    )
-data2.rel[[1]]
-
-plotresults(data2.merge, data2$mz)
-  data2.rel
-            )
-
-print(Sys.time())
-
-
-kuja.bf.col<-collect(kuja.bf)
-vanK.plot(kuja.bf.col, cex=.5, xlim=c(0,1), ylim=c(0,3), elements="CHO")
-
-
-
-
-dist<-dist(log(data2$mz[1:50]))
-clust<-as.hclust(agnes(dist))
-cutree(clust, h=log(1E-1))
-
-bf<-  data2.bf
-rel<- rbind(data2.rel, data2.c13.rel)
-i<-2
-results
-
-mz<-data2$mz
-head(mz)
-
-head(
-  bf$mz[1]==results$mz[1:6]
-  )
-head(mz)
-i<-1601
-cleanup(rows)
-rows
-results
-$calc.mass
-kuja.
-kuja.
-rel$id
-i<-83
-rel
-bf<-data2.bf
-rel<-data2.rel
-sink("dump")
-merge<-function(bf, rel, arg=F, clean=T) {
-  rel<-rel[rel$id>rel$from.id,T]
-  results<-row.template
-  nr.unique<-unique(c(bf$id, rel$id))
-  results[1:length(nr.unique), "id"]<-nr.unique
-  results$id<-sort(nr.unique)
-  nr<-length(results$id)
-  for (i in 1:nr){
-  print(paste(i, "/", nr))
-      #print(rel[rel$mz==results$mz[i],T])
-      #print(add.rel(results, rel[rel$mz==results$mz[i],T]))
-      #print(bf[bf$mz==results$mz[i],T])
-      tmp1<-rel[rel$id==results$id[i],T]
-      tmp1a<-tmp1[which(is.element(tmp1[,"from.id"], results$id)),T]
-        if (nrow(tmp1a)>0)
-              for (j in 1:nrow(tmp1a)) {
-                  tmp1a[j, elements]<-
-                    tmp1a[j,elements]+
-                    results[results$id==tmp1a[j,"from.id"], elements]
-                  tmp1a[j,T]<-calc.diffs(tmp1a[j,T])
-                }
-      tmp2<-bf[bf$id==results$id[i],T]
-      tmp3<-rbind(tmp1a, tmp2)
-      tmp4<-tmp3[is.na(tmp3$calc.mass)!=T,T]
-      print(tmp4)
-      if (nrow(tmp4)>0){
-        print(tmp4)
-        tmp5<-points.manipulation(tmp4, arg=arg, clean=clean)
-        print(tmp5)
-        if (sum(is.na(tmp5$calc.mass)!=T)>0 ) {
-          tmp6<-tmp5[which(tmp5$points==max(tmp5$points)),T]
-          print(tmp6)
-          results[i,2:ncol(results)]<-tmp6[1,2:ncol(tmp6)]
-        }
-      }
-  }
-  return(results)
-}
+files
 
 i<-1
-results
-[results$id==79,elements]+tmp1[j,elements]
-  tmp1
-tmp1a
-<-rel[rel$id==results$id[i],T]
+hist(cex)
 
-i<-84
+
+, bruteforce.lim=400)
+
+, tapply(data.red$groups, data.red$groups, length))
+
+data.red$mz[data.red$mz>i]
+
+length(unique(data.red$groups))
+
+groups.max
+
+data.red$mz[20000]
+
+90+(0:80)*20
   
+10:1600, step=20  
+  
+i
+<-90
 
-j<-1
-results$id
-merge(kuja.bf, kuja.rel)
-i<-121
-results
-tmp1
+bforce(uja)
+data2<-data2[order(data2$mz),T]
+data2$mz<-H.substract(data2$mz)
 
-tmp4
-tmp5
-tmp6
+outp<-bforce(data2)
+
+data2$km<-data2$mz*14/(mass.H1*2+mass.C12)
+
+data2$kmd<-ceiling(data2$km)-data2$km
+data2$z<-as.integer(data2$mz) %% 14 - 14
+
+plot(data2$kmd, data2$z, cex=0.2)
+
+data2$id<-1:nrow(data2)
+head(data2)
+files<-list.files("/home/lkohl/Documents/accmass/raw_data/Litter")
+files<-files[grep(".csv", files)]
+files[i]
+#
+read.csv("data_litter/3BFE.csv")
+
+
+data2
+data.merge<-merge(data2, results, by.x="id", by.y="id", all.x=T)
+vanK.plot(data.merge, cex=cex)
+max(cex)
+
+cex=1+log10(data.merge$Intensity/sum(data.merge$Intensity))/5
+
+head(data2)
+
+
+files<-files[1]
+
+file<-1
+for (i in 1:length(files))
+{
+  print(paste(files[i], ": file", i, "/", length(files)))
+data<-read.csv(paste("raw_data/SoilWater/", files[i], sep=""))
+data2<-data.frame(data[-(1:7), 1:7])
+colnames(data2)<-c("mz", "Intensity", "Relative Intensity", "Resolution", "Charge", "Baselin", "Noise")
+length(file)<-nrow(data2)
+file<-rep(data[1,1], nrow(data2))
+data3<-data.frame(data2, file)
+if (i == 1) {
+  data.collected<-data3
+  } else { data.collected<-rbind(data.collected, data3)}
+
+}
+
+data.collected2<-data.collected
+data.collected2$Noise<-as.numeric(data.collected$Noise)
+data.collected2$Intensity<-as.numeric(data.collected$Intensity)
+
+data.reduced<-
+  data.collected2[data.collected2$Intensity>3*data.collected2$Noise, T]
+data.reduced$mz<-as.numeric(as.character(data.reduced$mz))
+
+data.reduced<-data.reduced[order(data.reduced$mz),T]
+
+data2<-read.csv("raw_data/test2.csv")
+data2<-data2[data2$Intensity > 3* data2$Noise,T ]
+
+kuja<-read.csv("raw_data/kujawinski2006.csv")    
+  
+cluster.R	
+	
+rscr
+
+head(data2$mz)
+
+
+head(
+  data2
+  )
+
+data2<-data2[order(data2$mz),T]
+
+data.reduced$mz
+
+dist<-dist(log(data.reduced$mz))
+clust<-hclust(dist)
+
+data.reduced$mz<-H.substract(data.reduced$mz)
+Sys.time()
+results<-run.all(data.reduced, "mz")
+Sys.time()
+
+write.csv("results.csv", results)
 sink()
-max(results$C13)
-
-results[2150,T]
-results$mz
-results$calc.mass
-results
-
-h
