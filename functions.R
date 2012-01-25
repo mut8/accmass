@@ -180,9 +180,10 @@ bforce<-function(data, FE=3E-6, RE=2E-5, bruteforce.lim=500, verbose=T, clean=T,
             if(nrow(tmp)>0)
         tmp$id<-data$id[i]
       }
-    
+    if (verbose==T) {print(results)}
     tmp2 <- 
       findrelations(data[i, T], results,operations=operations, FE=FE)
+    if (verbose==T) {print(tmp2)}
     tmp3<-
       points.manipulation(rbind(tmp2, tmp), arg=arg, clean=clean)
     if (nrow(tmp3) > 0) {
@@ -283,7 +284,7 @@ points.manipulation<-function(rows, arg=F, clean=F)  {
 # clean=T
 
 
-vanK.plot<-function(df, ylab="H:C", xlab="O:C", elements="CHO", ...) {
+vanK.plot<-function(df, ylab="H:C", xlab="O:C", elements="CHO", add=F, ...) {
   x <- as.numeric(df$O) / (as.numeric(df$C) + as.numeric(df$C13))
 if (elements == "CHO")
   y <- as.numeric(df$H) / (as.numeric(df$C) + as.numeric(df$C13))
@@ -291,8 +292,7 @@ if (elements == "CNO")
   y <- as.numeric(df$N) / (as.numeric(df$C) + as.numeric(df$C13))
 if (elements == "CNO" & ylab=="H:C")
   ylab<-"N:C"
-  
-  plot(x, y, ylab=ylab, xlab=xlab, ...)
+  if (add==F) {plot(x, y, ylab=ylab, xlab=xlab, ...)} else {points(x, y, ylab=ylab, xlab=xlab, ...)}
 }
   
   
@@ -417,15 +417,17 @@ synth$id<-1:nrow(synth)
 return(synth)
 }
 
-test.alg<-function(IE=1E-6, n=10, FE=1E-6, n.sel=60, n.synth=1000) {
+test.alg<-function(IE=1E-6, n=10, FE=1E-6, n.sel=60, n.synth=1000, verbose=F) {
 ret<-data.frame(matrix(ncol=3, nrow=0))
 colnames(ret)<-c("not.det", "correct.det", "false.det")
 
 for (i in 1:n) {
 
   sample<-create.synth(kuja, IE=IE, n.sel=n.sel, n.synth=n.synth)
-  results<-bforce(sample, FE=FE)
+  results<-bforce(sample, FE=FE, verbose=verbose)
   ret[i,T]<-test.el(sample, results)
+  vanK.plot(results, pch=16, cex=0.5)
+  vanK.plot(sample, add=T, pch=17, col="red", cex=0.5)
 }
 return(ret)  
 }
