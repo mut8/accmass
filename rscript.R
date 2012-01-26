@@ -73,8 +73,10 @@ head(data.4a)
 $data.3a
 nrow(data.4)
 
+data.4a$mz<-  H.substract(data.4a$mz)
+
 results.data.4a.3ppm<-results.data.4a
-results.data.4a.3ppm.minNS<-bforce(H.substract(data.4a), arg="minNS")
+results.data.4a.3ppm.minNS<-bforce(data.4a, arg="minNS")
 
 results.data.4a$id<-ceiling(results.data.4a$id)+1
 results.data.4a.3ppm.minNS$id<-ceiling(results.data.4a.3ppm.minNS$id)
@@ -112,6 +114,9 @@ for(i in 1:length(files)) {
 results.file.merge<-
   merge(data.red2[data.red2$sample==files[i],T], 
 results.data.4a.3ppm.minNS, all.x=T, by.x="groups", by.y="id")
+results.file.merge<-
+  merge(data.red2[data.red2$sample==files[i],T], 
+results.data.4a.3ppm.min, all.x=T, by.x="groups", by.y="id")
 cex=(log(results.file.merge$Intensity)-min(log(results.file.merge$Intensity)))/(max(log(results.file.merge$Intensity))-min(log(results.file.merge$Intensity)))
 
 par(mar=c(0,4.1,4.1,2.1))

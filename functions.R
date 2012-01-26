@@ -44,7 +44,7 @@ operations<-  row.template
   operations[6,T]<-c(NA, NA, 2, 0, 2, 0, 1,0,0,0, NA, NA, NA, NA, NA,"+C2H2O",5, NA)
   operations[7,T]<-c(NA, NA, 0, 0, 0, 0, 1,0,0,0, NA, NA, NA, NA, NA,"+O",5, NA)
   operations[8,T]<-c(NA, NA, 1, 0, 0, 1, 0,0,0,0, NA, NA, NA, NA, NA,"+C2H2O",5, NA)
-  operations[9,T]<-c(NA, NA,-1, 1, 0, 0, 0,0,0,0, NA, NA, NA, NA, NA,"+C13 -C",1, NA)
+#  operations[9,T]<-c(NA, NA,-1, 1, 0, 0, 0,0,0,0, NA, NA, NA, NA, NA,"+C13 -C",1, NA)
 
 
 
@@ -95,14 +95,14 @@ findformula<-function(x, c.h.min=1/3, c.o.max=1, c13.max=2, c.n.max=1, s.max=3, 
             ctot <- c13 + c
             massleftNaPSC13C<-massleftNaPSC13 - c * mass.C12
             
-            for(n in 0:(min(ctot, ceiling(massleftNaPSC13C/12)))){
+            for(n in 0:(min(ctot*c.n.max, ceiling(massleftNaPSC13C/12)))){
               massleftNaPSC13CN<-massleftNaPSC13C - mass.N14 * n
               
-              for(o in 0:min(ctot, ceiling(massleftNaPSC13CN/14))){
+              for(o in 0:min(ctot*c.o.max, ceiling(massleftNaPSC13CN/14))){
                 massleftNaPSC13CNO<-massleftNaPSC13CN - mass.O16*o
                 #print(massleftNaPSC13CNO)
                 
-                for(h in max(floor(ctot/3), floor(massleftNaPSC13CNO*0.8), 0) : max(0, min(((2*ctot+n)+2), ceiling(massleftNaPSC13CNO*1.2)))) {
+                for(h in max(floor(ctot*c.h.min), floor(massleftNaPSC13CNO*0.8), 0) : max(0, min(((2*ctot+n)+2), ceiling(massleftNaPSC13CNO*1.2)))) {
                   #print(paste("C", c, "H", h, "O", o, "N", n, "S", s, "P", p, "Na", Na))
     
                   #check for N-rule (n+h %% 2 == 0)n
@@ -121,7 +121,7 @@ findformula<-function(x, c.h.min=1/3, c.o.max=1, c13.max=2, c.n.max=1, s.max=3, 
                       #print result
                       #print(paste("C", c, "C13", c13, "H", h, "N", n, "O", o,"P",p,"S",s,"Na",Na, "m=", calc.mass, "difference", calc.mass-x, "diff.ppm", 1E6*(calc.mass-x)/x))
                       tmp<-nrow(results)
-                      results[tmp+1, T]<-c(NA, x, c, c13, h, n, o, s, p, Na, calc.mass, calc.mass-x, 1E6*(calc.mass-x)/x, 1E-6*abs(x/(calc.mass-x)), NA, NA,NA, "bruteforce")
+                      results[tmp+1, T]<-c(0, x, c, c13, h, n, o, s, p, Na, calc.mass, calc.mass-x, 1E6*(calc.mass-x)/x, 1E-6*abs(x/(calc.mass-x)), NA, NA,NA, "bruteforce")
                     }
                   }
                 }
@@ -139,11 +139,12 @@ findformula<-function(x, c.h.min=1/3, c.o.max=1, c13.max=2, c.n.max=1, s.max=3, 
   return(results)
 }
 
-bforce<-function(data, FE=3E-6, RE=2E-5, bruteforce.lim=500, verbose=T, clean=T, arg=F) {
+bforce<-function(data, FE=3E-6, RE=2E-5, bruteforce.lim=500, verbose=T, clean=T, arg=F, c.h.min=1/3, c.o.max=1, c13.max=2, c.n.max=1, s.max=3, p.max=3, Na.max=0, error.type="FE") {
 
 #  #create result dataframe, set colnames
 #  data<-data.frame(matrix(nrow=length(mz), ncol=12))
 #  colnames(data)<-c("mz","C","C13","H","N","O","S","P","Na","calc.mass", "difference", "diff.ppm")
+  data<-data[order(data$mz),T]
   
   #add ascending m/z values to results dataframe
   imax<-length(data$mz)
@@ -155,7 +156,7 @@ bforce<-function(data, FE=3E-6, RE=2E-5, bruteforce.lim=500, verbose=T, clean=T,
   # for each m/z found
   #for(i in 1:179) {
   for(i in 1:imax) {
-    print(paste(i,"/",imax,sep=""))
+    print(paste(i,"/",imax,sep="", " m/z =", data$mz[i]))
 
       tmp<-row.template      
     
@@ -165,14 +166,14 @@ bforce<-function(data, FE=3E-6, RE=2E-5, bruteforce.lim=500, verbose=T, clean=T,
         #print(mz[i])
           #attempt to find the formula using CHON
           print("brief BF")
-          tmp<-findformula(data$mz[i], s.max=0, p.max=0, Na.max=0, c13.max=0)
+          tmp<-findformula(data$mz[i], s.max=0, p.max=0, Na.max=0, c.h.min=c.h.min, c.o.max=c.o.max, c13.max=c13.max, c.n.max=c.n.max)
 
           #if no result is found...
           if(nrow(tmp)==0) {
             print("extensive BF")
             
             #try with CHONPSNa
-            tmp<-findformula(data$mz[i], c13.max=0, Na.max=0)
+            tmp<-findformula(data$mz[i], c.h.min=c.h.min, c.o.max=c.o.max, c13.max=c13.max, c.n.max=c.n.max, s.max=s.max, p.max=p.max, Na.max=Na.max)
           }
         
         #ad all results found to the results list
@@ -182,7 +183,7 @@ bforce<-function(data, FE=3E-6, RE=2E-5, bruteforce.lim=500, verbose=T, clean=T,
       }
     if (verbose==T) {print(results)}
     tmp2 <- 
-      findrelations(data[i, T], results,operations=operations, FE=FE)
+      findrelations(data[i, T], results,operations=operations, FE=FE, RE=RE, error.type=error.type)
     if (verbose==T) {print(tmp2)}
     tmp3<-
       points.manipulation(rbind(tmp2, tmp), arg=arg, clean=clean)
@@ -203,12 +204,12 @@ bforce<-function(data, FE=3E-6, RE=2E-5, bruteforce.lim=500, verbose=T, clean=T,
 }
 
 
-findrelations<-function(row, results, operations=operations,FE=FE){
+findrelations<-function(row, results, operations=operations,FE=FE, error.type="FE", RE=RE){
 
   if(nrow(results)==0) {return(row.template)}
   
 kmax<-nrow(operations)
-imax<-length(results)
+imax<-nrow(results)
   
 diffs<-0
 print("calculate diffs")
@@ -217,7 +218,7 @@ for (i in 1:nrow(results))
 
 print("calculate diff error margins")
 
-margin<-sqrt(2)*row$mz*FE
+  if (error.type=="FE") {margin<-sqrt(2)*row$mz*FE} else if (error.type=="RE") {margin <- diffs*RE}
 
 diffsminerror<-diffs-margin
 diffspluerror<-diffs+margin
@@ -276,7 +277,7 @@ return(row)
 points.manipulation<-function(rows, arg=F, clean=F)  {
   if(clean==T) {rows<-cleanup(rows)}
   if(arg=="minNS") {rows$points<-1/(rows$N+rows$S)}
-  if(arg=="minNS.diff") {rows$points<-1000/(rows$N+rows$S)+1/rows$diff.ppm}
+  if(arg=="minNS.diff") {rows$points<-1000/(rows$N+rows$S+row$P+row$Na)+1/rows$diff.ppm}
   return(rows)  
 }
 # bf<-data2.bf
@@ -300,46 +301,6 @@ dbe<-function(row) {
   return(1+row$C+row$C13+row$N/2-row$H/2)
 }
 
-merge.results<-function(bf, rel, arg=F, clean=T) {
-  rel<-rel[rel$id>rel$from.id,T]
-  results<-row.template
-  nr.unique<-unique(c(bf$id, rel$id))
-  results[1:length(nr.unique), "id"]<-nr.unique
-  results$id<-sort(nr.unique)
-  nr<-length(results$id)
-  for (i in 1:nr){
-  print(paste(i, "/", nr))
-      #print(rel[rel$mz==results$mz[i],T])
-      #print(add.rel(results, rel[rel$mz==results$mz[i],T]))
-      #print(bf[bf$mz==results$mz[i],T])
-      tmp1<-rel[rel$id==results$id[i],T]
-      tmp1a<-tmp1[which(is.element(tmp1[,"from.id"], results$id)),T]
-        if (nrow(tmp1a)>0)
-              for (j in 1:nrow(tmp1a)) {
-                  tmp1a[j, elements]<-
-                    tmp1a[j,elements]+
-                    results[results$id==tmp1a[j,"from.id"], elements]
-                  tmp1a[j,T]<-calc.diffs(tmp1a[j,T])
-                }
-      tmp2<-bf[bf$id==results$id[i],T]
-      tmp3<-rbind(tmp1a, tmp2)
-      tmp4<-tmp3[is.na(tmp3$calc.mass)!=T,T]
-      print(tmp4)
-      if (nrow(tmp4)>0){
-        print(tmp4)
-        tmp5<-points.manipulation(tmp4, arg=arg, clean=clean)
-        print(tmp5)
-        if (sum(is.na(tmp5$calc.mass)!=T)>0 ) {
-          tmp6<-tmp5[which(tmp5$points==max(tmp5$points)),T]
-          print(tmp6)
-          results[i,2:ncol(results)]<-tmp6[1,2:ncol(tmp6)]
-        }
-      }
-  }
-  return(results)
-}
-
-
 cleanup<- function(rows) {
 #rows<-rows[-is.na(rows$calc.mass),T]
   kill=F
@@ -348,7 +309,7 @@ cleanup<- function(rows) {
      k2<-rows$C[i]+rows$C13[i]<1
      k3<-rows$H[i]>(2+2*rows$C[i]+2*rows$C13[i]+rows$N[i])
 #     k3<-rows$H[i]>(2+2*rows$C[i]+2*rows$C13[i])
-     k4<-rows$H[i]>3*rows$C[i]
+     k4<-rows$H[i]<1/3*rows$C[i]
      k5<-rows$O[i]>rows$C[i]
      k6<-rows$N[i]>rows$C[i]
      if(k1|k2|k3|k4|k5|k6) {kill[i]<-T} else {kill[i]<-F}
@@ -358,23 +319,9 @@ cleanup<- function(rows) {
 
 
 
-run.all<-function(data, mz) {
-  
-data<-data[order(data[,mz]),T]
-id<-1:nrow(data)
-ret<-cbind(id, data )
-data.bf<-bforce(ret[,"mz"], ret$id)
-data.rel<-  findrelations(ret[,"mz"], ret$id, operations=operations, FE=FE)
-data.merge<-merge.results(data.bf, data.rel)
 
-ret<-  merge(ret, data.merge, all.x=T, by="id")
+test.el<-function(sample, results, bruteforce.lim=500){
 
-return(ret)
-
-}
-
-
-test.el<-function(sample, results){
 res<-1
 for (i in sample$id) {
   if (length(which(results$id==sample$id[i]))==0)
@@ -382,11 +329,17 @@ for (i in sample$id) {
     if (sum(sample[i, elements]!=results[results$id==sample$id[i], elements])>0) {res[i]<-F} else {res[i]<-T}
   }
 }
-res2<-data.frame(not.det=sum(is.na(res)), correct.det=sum(res[is.na(res)==F]==T), false.found=sum(res[is.na(res)==F]==F))
+res2<-data.frame(not.det=sum(is.na(res)),
+                 not.det=sum(is.na(res[sample$mz<bruteforce.lim])),
+                 not.det=sum(is.na(res[sample$mz>bruteforce.lim])), 
+                 correct.det=sum(res[is.na(res)==F]==T),
+                 correct.det=sum(res[is.na(res)==F & sample$mz<bruteforce.lim]==T),
+                 correct.det=sum(res[is.na(res)==F & sample$mz>bruteforce.lim]==T),
+                 false.found=sum(res[is.na(res)==F]==F),
+                 false.found=sum(res[is.na(res)==F & sample$mz<bruteforce.lim] ==F),
+                 false.found=sum(res[is.na(res)==F & sample$mz>bruteforce.lim]==F))
 return(res2)
 }
-
-
 
 create.synth<-function(dat,IE=1E-6, n.sel=60, n.synth=1000) {
 
@@ -403,11 +356,14 @@ operations<-operations[1:8,T]
 
 for(i in 1:(n.synth-nrow(synth))) {
   print(paste(i, "/", (n.synth-n.sel)))
+  repeat {
   new.row<-row.template
   new.row<-synth[sample(1:nrow(synth),1),T]
   new.row[,elements]<-as.numeric(operations[sample(1:nrow(operations), 1),elements])*sample(1:5, 1)+as.numeric(new.row[,elements])
-  
   new.row<-calc.mass(new.row)
+  new.row<-cleanup(new.row)
+  if (nrow(new.row)>0) {break}
+  }
   synth<-rbind(synth, new.row)
 }
 
@@ -417,19 +373,16 @@ synth$id<-1:nrow(synth)
 return(synth)
 }
 
-test.alg<-function(IE=1E-6, n=10, FE=1E-6, n.sel=60, n.synth=1000, verbose=F) {
-ret<-data.frame(matrix(ncol=3, nrow=0))
-colnames(ret)<-c("not.det", "correct.det", "false.det")
+test.alg<-function(IE=1E-6, n=10, FE=1E-6, n.sel=60, n.synth=1000, verbose=F, RE=2E-5, error.type="RE", bruteforce.lim=500) {
+ret<-data.frame(matrix(ncol=9, nrow=0))
+colnames(ret)<-c("not.det.tot", "not.det.below.bflim", "not.det.above.bflim", "correct.det.tot", "correct.det.below.bflim", "correct.det.above.bflim", "false.det.tot", "false.det.below.bflim", "false.det.above.bflim")
 
 for (i in 1:n) {
 
-  sample<-create.synth(kuja, IE=IE, n.sel=n.sel, n.synth=n.synth)
-  results<-bforce(sample, FE=FE, verbose=verbose)
-  ret[i,T]<-test.el(sample, results)
-  vanK.plot(results, pch=16, cex=0.5)
-  vanK.plot(sample, add=T, pch=17, col="red", cex=0.5)
+  sample<-cleanup(create.synth(kuja, IE=IE, n.sel=n.sel, n.synth=n.synth))
+  results<-bforce(sample, FE=FE, verbose=verbose, Na.max=2, c13.max=0, bruteforce.lim=bruteforce.lim, error.type=error.type, RE=RE)
+  ret[i,T]<-test.el(sample, results, bruteforce.lim=bruteforce.lim)
 }
 return(ret)  
 }
-
 
